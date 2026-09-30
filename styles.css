@@ -202,3 +202,25 @@ td input[type="radio"] {
 @media (max-width:620px) {
  .entry-grid { grid-template-columns:94px 40px 72px minmax(90px,1fr); }
 }
+
+/* b1v11 entry layout */
+.entry-grid { display:block; max-width:none; }
+.entry-row {
+  display:grid;
+  grid-template-columns:88px 40px 123px 77px 40px;
+  column-gap:12px;
+  align-items:center;
+  margin-bottom:16px;
+}
+.entry-row input.short-input {
+  width:40px;
+  min-width:40px;
+  max-width:40px;
+  justify-self:start;
+}
+.entry-row input.value-input {
+  width:194px;
+  min-width:194px;
+  max-width:194px;
+  justify-self:start;
+}
