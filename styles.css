@@ -268,3 +268,54 @@ td input[type="radio"] {
 }
 
 /* b1v13: label-to-input spacing is controlled by the final inline rule in index.html. */
+
+/* =========================================================
+   b1v16 - corrections to the three requested changes
+   ========================================================= */
+
+/* 1. Move ONLY Save/Clear up 10px. The record buttons remain
+      in their existing document position. */
+.main-buttons {
+  transform: translateY(-10px) !important;
+}
+
+/* 2. Horizontal line 8px above the + / - / change buttons.
+      It does not participate in layout, so the three buttons
+      stay exactly where they were. It spans the viewport. */
+.record-buttons {
+  position: relative !important;
+}
+.record-buttons::before {
+  content: "";
+  position: absolute;
+  height: 1px;
+  background: #999;
+  top: -8px;
+  left: calc((100% - 100vw) / 2);
+  width: 100vw;
+}
+
+/* 3. List columns: every non-Value data column is exactly 15px.
+      Keep the radio-selection column at its existing compact width;
+      the Value column is intentionally left at its existing width. */
+.slc-table {
+  table-layout: fixed !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+.slc-table th:nth-child(2),
+.slc-table td:nth-child(2),
+.slc-table th:nth-child(3),
+.slc-table td:nth-child(3),
+.slc-table th:nth-child(4),
+.slc-table td:nth-child(4),
+.slc-table th:nth-child(5),
+.slc-table td:nth-child(5) {
+  width: 15px !important;
+  min-width: 15px !important;
+  max-width: 15px !important;
+  padding-left: 2px !important;
+  padding-right: 2px !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+}
