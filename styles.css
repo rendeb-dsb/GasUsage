@@ -192,3 +192,27 @@ td input[type="radio"] {
   }
   .entry-label { font-size: 15px; }
 }
+
+/* b1v8: compact SLC entry fields */
+.slc-entry-row input#groupCode,
+.slc-entry-row input#order,
+.slc-entry-row input#valueCode {
+  width: 50% !important;
+  max-width: 50% !important;
+  justify-self: start !important;
+}
+
+.slc-entry-row input#value {
+  justify-self: start !important;
+}
+
+/* b1v8: make the +, -, and change buttons half-size */
+.slc-action-buttons button {
+  min-width: 41px !important;
+  width: 41px !important;
+  min-height: 18px !important;
+  height: 18px !important;
+  padding: 0 !important;
+  font-size: 12px !important;
+  line-height: 16px !important;
+}
