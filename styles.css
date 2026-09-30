@@ -31,6 +31,9 @@ body {
   cursor: pointer;
 }
 main { padding: 14px 12px 28px; }
+.main-placeholder { min-height: 1px; }
+.slc-screen-header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:4px 0 16px; }
+.slc-screen-header h2 { margin:0; }
 h2 { font-size: 20px; margin: 4px 0 16px; }
 h3 { font-size: 17px; margin: 24px 0 10px; }
 .field {
@@ -72,8 +75,7 @@ table { border-collapse: collapse; width: 100%; min-width: 540px; font-size: 14p
 th, td { border: 1px solid #aaa; padding: 7px 8px; text-align: left; }
 th { background: #f0f0f0; }
 .hidden { display: none !important; }
-.notice { text-align: center; padding-top: 35px; }
-.notice-text { font-size: 20px; margin-bottom: 22px; }
+
 @media (min-width: 600px) {
   main { max-width: 760px; margin: 0 auto; }
 }

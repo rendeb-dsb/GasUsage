@@ -12,7 +12,7 @@
 <div class="app">
   <header class="topbar">
     <div class="title-area">
-      <span class="version">b1v4</span>
+      <span class="version">b1v5</span>
       <span class="app-title">Gas Usage</span>
     </div>
     <nav class="menu-bar" aria-label="Application menu">
@@ -29,7 +29,14 @@
 
   <main>
     <section id="mainScreen" class="screen">
-      <h2>System Lookup Codes</h2>
+      <div class="main-placeholder"></div>
+    </section>
+
+    <section id="gearScreen" class="screen hidden">
+      <div class="slc-screen-header">
+        <h2>System Lookup Codes</h2>
+        <button id="closeGear" type="button">Close</button>
+      </div>
 
       <form id="slcForm" novalidate>
         <div class="field">
@@ -74,13 +81,6 @@
           </thead>
           <tbody id="slcRows"></tbody>
         </table>
-      </div>
-    </section>
-
-    <section id="gearScreen" class="screen hidden">
-      <div class="notice">
-        <div class="notice-text">To be implemented.</div>
-        <button id="closeGear" class="primary">Close</button>
       </div>
     </section>
   </main>

@@ -1,6 +1,6 @@
-GasUsage PWA - Build 1 Version 4
+GasUsage PWA - Build 1 Version 5
 
-Displayed application version: b1v4
+Displayed application version: b1v5
 ZIP/build version: 4
 
 This build uses IndexedDB.
@@ -19,3 +19,5 @@ Open index.html through a web server/PWA host (such as GitHub Pages) for normal 
 JSON file management:
 - Actions > Export creates SystemLookupCodes.json containing the current SLC data.
 - Actions > Import accepts a previously exported JSON file and replaces the current SLC data after confirmation.
+
+Version 5 change: SystemLookupCodes management was moved from the main screen to the screen opened by the gear icon. The prior "To be implemented." message was removed.
