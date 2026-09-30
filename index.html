@@ -6,13 +6,45 @@
 <meta name="theme-color" content="#ffffff">
 <title>Gas Usage</title>
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=b1v10">
+<style id="b1v10-layout-fix">
+/* b1v10 layout corrections */
+.entry-grid { grid-template-columns: 105px 40px 86px minmax(80px, 1fr) !important; }
+.short-input {
+  width: 40px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+  justify-self: start !important;
+}
+.value-input {
+  width: 80% !important;
+  justify-self: start !important;
+}
+.record-buttons {
+  display: flex !important;
+  gap: 10px !important;
+}
+.record-button {
+  width: 17px !important;
+  min-width: 17px !important;
+  max-width: 17px !important;
+  height: 15px !important;
+  min-height: 15px !important;
+  max-height: 15px !important;
+  padding: 0 !important;
+  font-size: 10px !important;
+  line-height: 13px !important;
+}
+@media (max-width: 620px) {
+  .entry-grid { grid-template-columns: 94px 40px 72px minmax(90px, 1fr) !important; }
+}
+</style>
 </head>
 <body>
 <div class="app">
   <header class="topbar">
     <div class="title-area">
-      <span class="version">b1v9</span>
+      <span class="version">b1v10</span>
       <span class="app-title">Gas Usage</span>
     </div>
     <nav class="menu-bar" aria-label="Application menu">
