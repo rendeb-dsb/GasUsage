@@ -266,3 +266,5 @@ td input[type="radio"] {
 .entry-row:nth-child(2) .entry-label:last-of-type {
   grid-column: 3 !important;
 }
+
+/* b1v13: label-to-input spacing is controlled by the final inline rule in index.html. */

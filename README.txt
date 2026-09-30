@@ -1,6 +1,6 @@
-GasUsage PWA - Build 1 Version 12
+GasUsage PWA - Build 1 Version 13
 
-Displayed application version: b1v12
+Displayed application version: b1v13
 ZIP/build version: 7
 
 This build uses IndexedDB.
@@ -26,4 +26,7 @@ JSON:
 - Actions > Import accepts an exported JSON file and replaces the current SLC data after confirmation.
 
 
-b1v12 layout: all four SLC data-entry boxes share one left edge; each label is immediately followed by its associated box with a 10px gap.
+b1v13 layout: all four SLC data-entry boxes share one left edge; each label is immediately followed by its associated box with a 10px gap.
+
+
+b1v13: Each data-entry box is positioned exactly 10px after its associated label.
