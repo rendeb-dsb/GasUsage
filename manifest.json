@@ -1,9 +1,10 @@
 {
-  "name": "Gas Usage",
+  "name": "Gas Usage b1v15",
   "short_name": "GasUsage",
-  "start_url": "./",
+  "start_url": "./?v=b1v15",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
-  "icons": []
+  "icons": [],
+  "id": "./?app=gasusage-b1v15"
 }
