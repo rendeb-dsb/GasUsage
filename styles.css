@@ -84,7 +84,7 @@ h2 { font-size: 20px; margin: 4px 0; }
 }
 .entry-grid {
   display: grid;
-  grid-template-columns: 105px 80px 86px minmax(80px, 1fr);
+  grid-template-columns: 105px 40px 86px minmax(80px, 1fr);
   column-gap: 12px;
   row-gap: 16px;
   align-items: center;
@@ -105,8 +105,8 @@ h2 { font-size: 20px; margin: 4px 0; }
   min-width: 0;
   text-transform: none !important;
 }
-.short-input { width: 80px; }
-.value-input { width: 100%; }
+.short-input { width: 40px; justify-self: start; }
+.value-input { width: 80%; justify-self: start; }
 #groupCode, #valueCode { text-transform: uppercase !important; }
 #order { text-transform: none !important; }
 
@@ -135,16 +135,16 @@ h2 { font-size: 20px; margin: 4px 0; }
   margin-top: 10px;
 }
 .record-button {
-  width: 34px;
-  height: 30px;
-  min-width: 34px;
-  min-height: 30px;
+  width: 17px;
+  height: 15px;
+  min-width: 17px;
+  min-height: 15px;
   padding: 0;
   border: 1px solid #777;
-  border-radius: 3px;
+  border-radius: 2px;
   background: #f4f4f4;
-  font-size: 18px;
-  line-height: 28px;
+  font-size: 10px;
+  line-height: 13px;
   cursor: pointer;
 }
 
@@ -187,32 +187,9 @@ td input[type="radio"] {
 
 @media (max-width: 620px) {
   .entry-grid {
-    grid-template-columns: 94px 80px 72px minmax(90px, 1fr);
+    grid-template-columns: 94px 40px 72px minmax(90px, 1fr);
     column-gap: 8px;
   }
   .entry-label { font-size: 15px; }
 }
 
-/* b1v8: compact SLC entry fields */
-.slc-entry-row input#groupCode,
-.slc-entry-row input#order,
-.slc-entry-row input#valueCode {
-  width: 50% !important;
-  max-width: 50% !important;
-  justify-self: start !important;
-}
-
-.slc-entry-row input#value {
-  justify-self: start !important;
-}
-
-/* b1v8: make the +, -, and change buttons half-size */
-.slc-action-buttons button {
-  min-width: 41px !important;
-  width: 41px !important;
-  min-height: 18px !important;
-  height: 18px !important;
-  padding: 0 !important;
-  font-size: 12px !important;
-  line-height: 16px !important;
-}
