@@ -12,16 +12,18 @@
 <div class="app">
   <header class="topbar">
     <div class="title-area">
-      <span class="version">b1v3</span>
+      <span class="version">b1v4</span>
       <span class="app-title">Gas Usage</span>
     </div>
-    <div class="menu-area">
-      <button id="actionsButton" class="menu-button" aria-haspopup="true" aria-expanded="false">Actions</button>
-      <div id="actionsMenu" class="submenu hidden">
-        <button id="importButton" class="submenu-item">Import</button>
-        <button id="exportButton" class="submenu-item">Export</button>
+    <nav class="menu-bar" aria-label="Application menu">
+      <div class="menu-area">
+        <button id="actionsButton" class="menu-entry" aria-haspopup="true" aria-expanded="false">Actions</button>
+        <div id="actionsMenu" class="submenu hidden">
+          <button id="importButton" class="submenu-item">Import</button>
+          <button id="exportButton" class="submenu-item">Export</button>
+        </div>
       </div>
-    </div>
+    </nav>
     <button id="gearButton" class="gear-button" aria-label="Settings">⚙</button>
   </header>
 
@@ -47,7 +49,7 @@
 
         <div class="field">
           <label for="value">Value</label>
-          <input id="value" autocomplete="off" required>
+          <input id="value" type="text" autocomplete="off" required>
         </div>
 
         <div id="message" class="message" aria-live="polite"></div>

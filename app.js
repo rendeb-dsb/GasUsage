@@ -138,6 +138,9 @@ document.querySelectorAll("#groupCode, #valueCode").forEach(input => {
   });
 });
 
+// Value intentionally accepts mixed case and has no length limit.
+
+
 
 const actionsButton = document.getElementById("actionsButton");
 const actionsMenu = document.getElementById("actionsMenu");

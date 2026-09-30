@@ -1,7 +1,7 @@
-GasUsage PWA - Build 1 Version 3
+GasUsage PWA - Build 1 Version 4
 
-Displayed application version: b1v3
-ZIP/build version: 3
+Displayed application version: b1v4
+ZIP/build version: 4
 
 This build uses IndexedDB.
 Database: GasUsageDB
