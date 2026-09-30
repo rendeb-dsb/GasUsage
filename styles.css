@@ -77,3 +77,35 @@ th { background: #f0f0f0; }
 @media (min-width: 600px) {
   main { max-width: 760px; margin: 0 auto; }
 }
+
+.field input { text-transform: none; }
+
+.menu-area { position: relative; }
+.menu-button {
+  min-width: 78px;
+  min-height: 32px;
+  padding: 4px 9px;
+}
+.submenu {
+  position: absolute;
+  right: 0;
+  top: 38px;
+  z-index: 30;
+  min-width: 120px;
+  background: #fff;
+  border: 1px solid #999;
+  border-radius: 4px;
+  box-shadow: 0 2px 7px rgba(0,0,0,.18);
+  padding: 3px 0;
+}
+.submenu-item {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  text-align: left;
+  padding: 9px 12px;
+}
+.submenu-item:hover { background: #eee; }

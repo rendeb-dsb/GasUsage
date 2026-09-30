@@ -12,8 +12,15 @@
 <div class="app">
   <header class="topbar">
     <div class="title-area">
-      <span class="version">b1v2</span>
+      <span class="version">b1v3</span>
       <span class="app-title">Gas Usage</span>
+    </div>
+    <div class="menu-area">
+      <button id="actionsButton" class="menu-button" aria-haspopup="true" aria-expanded="false">Actions</button>
+      <div id="actionsMenu" class="submenu hidden">
+        <button id="importButton" class="submenu-item">Import</button>
+        <button id="exportButton" class="submenu-item">Export</button>
+      </div>
     </div>
     <button id="gearButton" class="gear-button" aria-label="Settings">⚙</button>
   </header>
@@ -40,7 +47,7 @@
 
         <div class="field">
           <label for="value">Value</label>
-          <input id="value" maxlength="10" autocomplete="off" required>
+          <input id="value" autocomplete="off" required>
         </div>
 
         <div id="message" class="message" aria-live="polite"></div>
@@ -75,6 +82,7 @@
       </div>
     </section>
   </main>
+  <input id="jsonFileInput" type="file" accept=".json,application/json" class="hidden">
 </div>
 <script src="app.js"></script>
 </body>
