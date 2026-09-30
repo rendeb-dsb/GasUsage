@@ -77,6 +77,17 @@ async function renderRows() {
   tbody.innerHTML = "";
   for (const row of rows) {
     const tr = document.createElement("tr");
+
+    const radioTd = document.createElement("td");
+    radioTd.className = "radio-cell";
+    const radio = document.createElement("input");
+    radio.type = "radio";
+    radio.name = "slcSelect";
+    radio.value = String(row.SLCId);
+    radio.setAttribute("aria-label", `Select SLCId ${row.SLCId}`);
+    radioTd.appendChild(radio);
+    tr.appendChild(radioTd);
+
     [row.SLCId, row.GroupCode, row.Order, row.ValueCode, row.Value]
       .forEach(value => {
         const td = document.createElement("td");

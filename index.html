@@ -12,7 +12,7 @@
 <div class="app">
   <header class="topbar">
     <div class="title-area">
-      <span class="version">b1v5</span>
+      <span class="version">b1v6</span>
       <span class="app-title">Gas Usage</span>
     </div>
     <nav class="menu-bar" aria-label="Application menu">
@@ -39,24 +39,26 @@
       </div>
 
       <form id="slcForm" novalidate>
-        <div class="field">
-          <label for="groupCode">Group Code</label>
-          <input id="groupCode" maxlength="2" autocomplete="off" required>
+        <div class="field-row">
+          <div class="field">
+            <label for="groupCode">Group Code</label>
+            <input id="groupCode" maxlength="2" autocomplete="off" required>
+          </div>
+          <div class="field">
+            <label for="order">Order</label>
+            <input id="order" type="number" min="1" step="1" inputmode="numeric" required>
+          </div>
         </div>
 
-        <div class="field">
-          <label for="order">Order</label>
-          <input id="order" type="number" min="1" step="1" inputmode="numeric" required>
-        </div>
-
-        <div class="field">
-          <label for="valueCode">Value Code</label>
-          <input id="valueCode" maxlength="2" autocomplete="off" required>
-        </div>
-
-        <div class="field">
-          <label for="value">Value</label>
-          <input id="value" type="text" autocomplete="off" required>
+        <div class="field-row">
+          <div class="field">
+            <label for="valueCode">Value Code</label>
+            <input id="valueCode" maxlength="2" autocomplete="off" required>
+          </div>
+          <div class="field value-field">
+            <label for="value">Value</label>
+            <input id="value" type="text" autocomplete="off" required>
+          </div>
         </div>
 
         <div id="message" class="message" aria-live="polite"></div>
@@ -72,10 +74,11 @@
         <table>
           <thead>
             <tr>
+              <th class="radio-header"></th>
               <th>SLCId</th>
-              <th>Group Code</th>
+              <th class="two-line-header">Group<br>Code</th>
               <th>Order</th>
-              <th>Value Code</th>
+              <th class="two-line-header">Value<br>Code</th>
               <th>Value</th>
             </tr>
           </thead>
