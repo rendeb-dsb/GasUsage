@@ -1,6 +1,6 @@
-GasUsage PWA - Build 1 Version 11
+GasUsage PWA - Build 1 Version 12
 
-Displayed application version: b1v11
+Displayed application version: b1v12
 ZIP/build version: 7
 
 This build uses IndexedDB.
@@ -24,3 +24,6 @@ Record controls:
 JSON:
 - Actions > Export creates SystemLookupCodes.json.
 - Actions > Import accepts an exported JSON file and replaces the current SLC data after confirmation.
+
+
+b1v12 layout: all four SLC data-entry boxes share one left edge; each label is immediately followed by its associated box with a 10px gap.

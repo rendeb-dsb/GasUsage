@@ -224,3 +224,45 @@ td input[type="radio"] {
   max-width:194px;
   justify-self:start;
 }
+
+/* b1v12: deterministic SLC entry alignment */
+.entry-grid {
+  display: block !important;
+  width: 100% !important;
+  max-width: none !important;
+}
+.entry-row {
+  display: grid !important;
+  grid-template-columns: 88px 40px 77px 40px !important;
+  column-gap: 10px !important;
+  align-items: center !important;
+  margin-bottom: 16px !important;
+}
+.entry-row .entry-label {
+  white-space: nowrap !important;
+  font-size: 16px !important;
+  line-height: 1.05 !important;
+}
+.entry-row input.short-input,
+.entry-row input.value-input {
+  justify-self: start !important;
+  box-sizing: border-box !important;
+}
+.entry-row input.short-input {
+  width: 40px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+  height: 38px !important;
+}
+.entry-row input.value-input {
+  grid-column: 4 !important;
+  width: 194px !important;
+  min-width: 194px !important;
+  max-width: 194px !important;
+  height: 38px !important;
+}
+
+/* Put both second labels directly before their associated input. */
+.entry-row:nth-child(2) .entry-label:last-of-type {
+  grid-column: 3 !important;
+}

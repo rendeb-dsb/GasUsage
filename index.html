@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#ffffff">
 <title>Gas Usage</title>
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="styles.css?v=b1v11">
-<style id="b1v11-layout-fix">
-/* b1v11 layout corrections */
+<link rel="stylesheet" href="styles.css?v=b1v12">
+<style id="b1v12-layout-fix">
+/* b1v12 layout corrections */
 .entry-grid { grid-template-columns: 105px 40px 86px minmax(80px, 1fr) !important; }
 .short-input {
   width: 40px !important;
@@ -40,8 +40,8 @@
 }
 </style>
 
-<style id="b1v11-entry-layout">
-/* b1v11: exact entry alignment requested by the user.
+<style id="b1v12-entry-layout">
+/* b1v12: exact entry alignment requested by the user.
    Content starts at the existing 12px main padding.
    Column starts are: label 24px, short boxes 124px, second label 311px,
    second set of boxes 400px on the phone layout. */
@@ -98,7 +98,7 @@
 <div class="app">
   <header class="topbar">
     <div class="title-area">
-      <span class="version">b1v11</span>
+      <span class="version">b1v12</span>
       <span class="app-title">Gas Usage</span>
     </div>
     <nav class="menu-bar" aria-label="Application menu">
@@ -129,7 +129,6 @@
           <div class="entry-row">
             <div class="entry-label stacked-label">Group<br>Code:</div>
             <input id="groupCode" class="short-input" maxlength="2" autocomplete="off" required>
-            <div class="entry-spacer" aria-hidden="true"></div>
             <div class="entry-label">Order:</div>
             <input id="order" class="short-input" type="number" min="1" step="1" inputmode="numeric" required>
           </div>
@@ -137,7 +136,6 @@
           <div class="entry-row">
             <div class="entry-label stacked-label">Value<br>Code:</div>
             <input id="valueCode" class="short-input" maxlength="2" autocomplete="off" required>
-            <div class="entry-spacer" aria-hidden="true"></div>
             <div class="entry-label">Value:</div>
             <input id="value" class="value-input" type="text" autocomplete="off" required>
           </div>
