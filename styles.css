@@ -422,3 +422,24 @@ th,td { border-color:#8d9092; }
 #purchaseGallons, #purchasePrice, #purchaseCost { width: 150px !important; }
 #purchaseCost.calculated-cost { color: #176b2c !important; }
 #purchaseCost.user-cost { color: #111 !important; }
+
+/* b1v25: Force the requested purchase-control widths.  The controls are
+   grid children, so explicitly constrain min/max width as well as width
+   and prevent grid stretching. */
+.purchase-form-grid #purchaseDate,
+.purchase-form-grid #purchaseStation,
+.purchase-form-grid #purchaseCar,
+.purchase-form-grid #purchaseGallons,
+.purchase-form-grid #purchasePrice,
+.purchase-form-grid #purchaseCost {
+  min-width: 0 !important;
+  max-width: none !important;
+  justify-self: start !important;
+  box-sizing: border-box !important;
+}
+.purchase-form-grid #purchaseDate { width: 168px !important; }
+.purchase-form-grid #purchaseStation { width: 260px !important; }
+.purchase-form-grid #purchaseCar { width: 250px !important; }
+.purchase-form-grid #purchaseGallons,
+.purchase-form-grid #purchasePrice,
+.purchase-form-grid #purchaseCost { width: 150px !important; }

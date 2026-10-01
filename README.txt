@@ -1,6 +1,6 @@
 GasUsage PWA - Build 1 Version 24
 
-Displayed application version: b1v24
+Displayed application version: b1v25
 ZIP/build version: 24
 
 This build uses IndexedDB.
@@ -50,12 +50,12 @@ b1v18 corrections:
 b1v18: SLCId, Group Code, Order, and Value Code are each 100px wide. Radio and Value columns are unchanged.
 
 
-b1v24 layout changes:
+b1v25 layout changes:
 - The Close button is now below the Saved System Lookup Codes list, left-justified with a 20px left margin and 20px top margin.
 - Save/Clear moved upward 15px; all content below those buttons moves upward with them.
 - The four SLC list columns remain 50px wide; radio and Value columns are unchanged.
 
-b1v24 Stations table
+b1v25 Stations table
 --------------------
 IndexedDB object store: Stations
 - StationId: primary key, unique whole number, auto-generated starting at 1
@@ -70,14 +70,14 @@ IndexedDB object store: Stations
 The Stations object store is added by the IndexedDB version-2 migration and does not alter existing SystemLookupCodes records.
 
 
-b1v24 changes:
+b1v25 changes:
 - Purchase Car dropdown now loads only SystemLookupCodes rows with GroupCode CR.
 - The first CR row is selected by default when adding a purchase.
 - Purchase entry controls shortened as requested: Date 25px, Station 50px, Car 60px, and Gallons/Price/Cost 60px.
 - Purchase Date uses a fixed MM/DD/20YY mask; slash separators and the “20” are not deletable. Backspace deletes the prior editable digit and leaves the cursor in that digit position.
 
 
-b1v24 cost behavior:
+b1v25 cost behavior:
 - When both Gallons and Price contain positive numeric values, Cost is calculated as Gallons x Price and displayed to two decimal places in green.
 - If the user edits Cost, the calculated value is replaced by the user's value and displayed in black.
 - The value displayed in Cost is the value saved regardless of display color.
