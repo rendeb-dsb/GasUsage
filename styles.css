@@ -351,3 +351,8 @@ td input[type="radio"] {
   margin: 20px 0 0 20px !important;
   font-size: 16px !important;
 }
+
+/* b1v20: align the Close button with the left edge of the list. */
+.close-button {
+  margin-left: 0 !important;
+}

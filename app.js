@@ -1,5 +1,5 @@
 const DB_NAME = "GasUsageDB";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAME = "SystemLookupCodes";
 
 let db;
@@ -18,6 +18,16 @@ function openDatabase() {
         });
         store.createIndex("GroupCode", "GroupCode", { unique: false });
         store.createIndex("GroupCode_Order", ["GroupCode", "Order"], { unique: true });
+      }
+
+      // b1v20: add the Stations table without changing existing SLC data.
+      if (!database.objectStoreNames.contains("Stations")) {
+        const stations = database.createObjectStore("Stations", {
+          keyPath: "StationId",
+          autoIncrement: true
+        });
+        stations.createIndex("Name", "Name", { unique: true });
+        stations.createIndex("Brand", "Brand", { unique: false });
       }
     };
 
