@@ -1,5 +1,5 @@
 const DB_NAME = "GasUsageDB";
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 const STORE_NAME = "SystemLookupCodes";
 
 let db;
@@ -11,42 +11,42 @@ function openDatabase() {
 
     request.onupgradeneeded = (event) => {
       const database = event.target.result;
+      const tx = event.target.transaction;
+
+      // Create missing stores only. Existing stores and records are never cleared.
+      let store;
       if (!database.objectStoreNames.contains(STORE_NAME)) {
-        const store = database.createObjectStore(STORE_NAME, {
-          keyPath: "SLCId",
-          autoIncrement: true
-        });
+        store = database.createObjectStore(STORE_NAME, { keyPath: "SLCId", autoIncrement: true });
+      } else {
+        store = tx.objectStore(STORE_NAME);
+      }
+      if (!store.indexNames.contains("GroupCode")) {
         store.createIndex("GroupCode", "GroupCode", { unique: false });
+      }
+      if (!store.indexNames.contains("GroupCode_Order")) {
         store.createIndex("GroupCode_Order", ["GroupCode", "Order"], { unique: true });
       }
 
-      // b1v22: add the Stations table without changing existing SLC data.
+      let stations;
       if (!database.objectStoreNames.contains("Stations")) {
-        const stations = database.createObjectStore("Stations", {
-          keyPath: "StationId",
-          autoIncrement: true
-        });
-        stations.createIndex("Name", "Name", { unique: true });
-        stations.createIndex("Brand", "Brand", { unique: false });
+        stations = database.createObjectStore("Stations", { keyPath: "StationId", autoIncrement: true });
+      } else {
+        stations = tx.objectStore("Stations");
       }
+      if (!stations.indexNames.contains("Name")) stations.createIndex("Name", "Name", { unique: true });
+      if (!stations.indexNames.contains("Brand")) stations.createIndex("Brand", "Brand", { unique: false });
 
-      // b1v22: add the Purchases table without changing existing data.
+      let purchases;
       if (!database.objectStoreNames.contains("Purchases")) {
-        const purchases = database.createObjectStore("Purchases", {
-          keyPath: "PurchaseId",
-          autoIncrement: true
-        });
-        purchases.createIndex("PurchaseDate", "PurchaseDate", { unique: false });
-        purchases.createIndex("Station", "Station", { unique: false });
-        purchases.createIndex("Car", "Car", { unique: false });
+        purchases = database.createObjectStore("Purchases", { keyPath: "PurchaseId", autoIncrement: true });
+      } else {
+        purchases = tx.objectStore("Purchases");
       }
-
-      // b1v30 safety migration: add only a non-unique lookup index.
-      // Existing records are never cleared, recreated, or deleted during upgrade.
-      const purchaseStore = database.objectStoreNames.contains("Purchases")
-        ? event.target.transaction.objectStore("Purchases") : null;
-      if (purchaseStore && !purchaseStore.indexNames.contains("Station_Date_Gallons")) {
-        purchaseStore.createIndex("Station_Date_Gallons", ["Station", "PurchaseDate", "Gallons"], { unique: false });
+      if (!purchases.indexNames.contains("PurchaseDate")) purchases.createIndex("PurchaseDate", "PurchaseDate", { unique: false });
+      if (!purchases.indexNames.contains("Station")) purchases.createIndex("Station", "Station", { unique: false });
+      if (!purchases.indexNames.contains("Car")) purchases.createIndex("Car", "Car", { unique: false });
+      if (!purchases.indexNames.contains("Station_Date_Gallons")) {
+        purchases.createIndex("Station_Date_Gallons", ["Station", "PurchaseDate", "Gallons"], { unique: false });
       }
     };
 
@@ -87,13 +87,29 @@ function validate(groupCode, order, valueCode, value) {
 
 function saveRecord(record, id = null) {
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readwrite");
-    const store = tx.objectStore(STORE_NAME);
-    const request = id === null
-      ? store.add(record)
-      : store.put({ ...record, SLCId: id });
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
+    let settled = false;
+    let request;
+    try {
+      const tx = db.transaction(STORE_NAME, "readwrite");
+      const store = tx.objectStore(STORE_NAME);
+      const data = id === null ? record : { ...record, SLCId: id };
+      request = id === null ? store.add(data) : store.put(data);
+
+      request.onerror = () => {
+        if (!settled) { settled = true; reject(request.error || new Error("IndexedDB save request failed.")); }
+      };
+      tx.onerror = () => {
+        if (!settled) { settled = true; reject(tx.error || new Error("IndexedDB save transaction failed.")); }
+      };
+      tx.onabort = () => {
+        if (!settled) { settled = true; reject(tx.error || new Error("IndexedDB save transaction was aborted.")); }
+      };
+      tx.oncomplete = () => {
+        if (!settled) { settled = true; resolve(request.result); }
+      };
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 
@@ -205,7 +221,8 @@ document.getElementById("slcForm").addEventListener("submit", async (event) => {
     if (err && err.name === "ConstraintError") {
       showMessage("That Order is already used within this Group Code.", "error");
     } else {
-      showMessage("The record could not be saved.", "error");
+      const detail = err && err.message ? err.message : "IndexedDB save failed.";
+      showMessage("Gas Usage: " + detail, "error");
     }
   }
 });
