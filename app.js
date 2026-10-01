@@ -41,7 +41,7 @@ function openDatabase() {
         purchases.createIndex("Car", "Car", { unique: false });
       }
 
-      // b1v28 safety migration: add only a non-unique lookup index.
+      // b1v29 safety migration: add only a non-unique lookup index.
       // Existing records are never cleared, recreated, or deleted during upgrade.
       const purchaseStore = database.objectStoreNames.contains("Purchases")
         ? event.target.transaction.objectStore("Purchases") : null;
