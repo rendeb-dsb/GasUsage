@@ -320,7 +320,7 @@ td input[type="radio"] {
   word-break: break-word !important;
 }
 
-/* b1v17: SLC list columns. Radio and Value remain unchanged. */
+/* b1v18: SLC list columns. Radio and Value remain unchanged. */
 .slc-table {
   table-layout: auto !important;
 }
@@ -332,8 +332,8 @@ td input[type="radio"] {
 .slc-table td:nth-child(4),
 .slc-table th:nth-child(5),
 .slc-table td:nth-child(5) {
-  width: 100px !important;
-  min-width: 100px !important;
-  max-width: 100px !important;
+  width: 50px !important;
+  min-width: 50px !important;
+  max-width: 50px !important;
   box-sizing: border-box !important;
 }
