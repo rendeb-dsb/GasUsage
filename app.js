@@ -456,6 +456,9 @@ function removeStation(id) {
 function getBrandCodes() {
   return getAllRecords().then(rows=>rows.filter(r=>r.GroupCode==="BR").sort((a,b)=>a.Order-b.Order));
 }
+function getCarCodes() {
+  return getAllRecords().then(rows=>rows.filter(r=>r.GroupCode==="CR").sort((a,b)=>a.Order-b.Order));
+}
 
 async function renderStations(selected=null) {
   const [rows,brands]=await Promise.all([getAllStations(),getBrandCodes()]);
@@ -572,45 +575,105 @@ function maskedDateToISO(v) {
   return `${yyyy}-${mm}-${dd}`;
 }
 function setMaskedDateValue(raw) {
-  const digits=String(raw||"").replace(/\D/g,"").slice(0,8);
-  const fixed="20";
-  let out="";
-  if(digits.length>0) out=digits.slice(0,2);
-  if(digits.length>=3) out+="/"+digits.slice(2,4);
-  if(digits.length>=5) out+="/"+fixed+digits.slice(4,6);
-  else if(digits.length>=3) out+="/20";
-  return out;
+  const digits=String(raw||"").replace(/\D/g,"").slice(0,6);
+  const chars=Array(10).fill(" ");
+  // Fixed separators and fixed century.
+  chars[2]="/"; chars[5]="/"; chars[6]="2"; chars[7]="0";
+  [0,1,3,4,8,9].forEach((pos,i)=>{ if(digits[i]) chars[pos]=digits[i]; });
+  return chars.join("");
 }
 function applyDateMask(input) {
-  let digits=input.value.replace(/\D/g,"");
-  // The first four digits are MMDD; the last two are YY. 20 is never editable.
-  if(digits.length>6) digits=digits.slice(0,6);
-  let out="";
-  if(digits.length) out=digits.slice(0,2);
-  if(digits.length>=3) out+="/"+digits.slice(2,4);
-  if(digits.length>=5) out+="/20"+digits.slice(4,6);
-  else if(digits.length>=3) out+="/20";
-  input.value=out;
+  // Keep the mask positions fixed: MM/DD/20YY.
+  const digits=input.value.replace(/\D/g,"").slice(0,6);
+  input.value=setMaskedDateValue(digits);
+}
+function previousEditablePosition(pos) {
+  const editable=[0,1,3,4,8,9];
+  for(let i=editable.length-1;i>=0;i--) if(editable[i] < pos) return editable[i];
+  return null;
+}
+function nextEditablePosition(pos) {
+  const editable=[0,1,3,4,8,9];
+  for(const p of editable) if(p >= pos) return p;
+  return null;
+}
+function normalizeDateValue(value) {
+  const chars=Array(10).fill(" ");
+  chars[2]="/"; chars[5]="/"; chars[6]="2"; chars[7]="0";
+  const source=String(value||"");
+  [0,1,3,4,8,9].forEach(pos=>{
+    const ch=source[pos];
+    if(/\d/.test(ch||"")) chars[pos]=ch;
+  });
+  return chars.join("");
 }
 function setupPurchaseDateMask() {
   const input=document.getElementById("purchaseDate");
-  input.addEventListener("input",()=>applyDateMask(input));
+  input.value=normalizeDateValue(input.value);
+
   input.addEventListener("keydown",e=>{
-    if(e.key==="Backspace" || e.key==="Delete") {
+    const editable=[0,1,3,4,8,9];
+    const start=input.selectionStart ?? 0;
+    const end=input.selectionEnd ?? start;
+
+    if(e.key==="Backspace") {
       e.preventDefault();
-      let digits=input.value.replace(/\D/g,"");
-      if(e.key==="Backspace") digits=digits.slice(0,-1); else digits=digits.slice(0,-1);
-      input.value="";
-      let out="";
-      if(digits.length) out=digits.slice(0,2);
-      if(digits.length>=3) out+="/"+digits.slice(2,4);
-      if(digits.length>=5) out+="/20"+digits.slice(4,6);
-      else if(digits.length>=3) out+="/20";
-      input.value=out;
-      const pos=input.value.length; input.setSelectionRange(pos,pos);
+      let target=previousEditablePosition(start);
+      if(start!==end) {
+        for(const p of editable) if(p>=start && p<end) input.value=input.value.slice(0,p)+" "+input.value.slice(p+1);
+        input.value=normalizeDateValue(input.value);
+        input.setSelectionRange(start,start);
+        return;
+      }
+      if(target!==null) {
+        input.value=input.value.slice(0,target)+" "+input.value.slice(target+1);
+        input.value=normalizeDateValue(input.value);
+        input.setSelectionRange(target,target);
+      }
+      return;
+    }
+
+    if(e.key==="Delete") {
+      e.preventDefault();
+      let target=nextEditablePosition(start);
+      if(start!==end) {
+        for(const p of editable) if(p>=start && p<end) input.value=input.value.slice(0,p)+" "+input.value.slice(p+1);
+        input.value=normalizeDateValue(input.value);
+        input.setSelectionRange(start,start);
+        return;
+      }
+      if(target!==null) {
+        input.value=input.value.slice(0,target)+" "+input.value.slice(target+1);
+        input.value=normalizeDateValue(input.value);
+        input.setSelectionRange(start,start);
+      }
+      return;
+    }
+
+    if(/^\d$/.test(e.key)) {
+      e.preventDefault();
+      let target=nextEditablePosition(start);
+      if(target===null) return;
+      input.value=input.value.slice(0,target)+e.key+input.value.slice(target+1);
+      input.value=normalizeDateValue(input.value);
+      const next=nextEditablePosition(target+1);
+      input.setSelectionRange(next===null?10:next,next===null?10:next);
     }
   });
+
+  input.addEventListener("click",()=>{
+    const pos=input.selectionStart ?? 0;
+    const next=nextEditablePosition(pos);
+    if(pos===2 || pos===5 || pos===6 || pos===7) {
+      const p=next===null?10:next; input.setSelectionRange(p,p);
+    }
+  });
+
+  input.addEventListener("focus",()=>{
+    input.value=normalizeDateValue(input.value);
+  });
 }
+
 function stationNameMap(rows){return new Map(rows.map(s=>[s.StationId,s.Name]));}
 async function renderPurchases(selected=null) {
   const [rows,stations]=await Promise.all([getAllPurchases(),getAllStations()]);
@@ -629,14 +692,30 @@ async function renderPurchases(selected=null) {
 }
 function selectedPurchaseId(){const r=document.querySelector('input[name="selectedPurchase"]:checked');return r?Number(r.value):null;}
 async function loadPurchaseOptions(selectedStation=null,selectedCar=null){
-  const [stations,cars]=await Promise.all([getAllStations(),getBrandCodes()]);
+  const [stations,cars]=await Promise.all([getAllStations(),getCarCodes()]);
   const ss=document.getElementById("purchaseStation"), cs=document.getElementById("purchaseCar");
   ss.innerHTML=""; cs.innerHTML="";
-  let o=document.createElement("option");o.value="";o.textContent="Select station";ss.appendChild(o);
-  stations.sort((a,b)=>a.Name.localeCompare(b.Name)).forEach(x=>{let q=document.createElement("option");q.value=x.StationId;q.textContent=x.Name;if(Number(selectedStation)===x.StationId)q.selected=true;ss.appendChild(q)});
-  o=document.createElement("option");o.value="";o.textContent="Select car";cs.appendChild(o);
-  cars.forEach(x=>{let q=document.createElement("option");q.value=x.SLCId;q.textContent=x.Value;if(Number(selectedCar)===x.SLCId)q.selected=true;cs.appendChild(q)});
+
+  let o=document.createElement("option");
+  o.value=""; o.textContent="Select station"; ss.appendChild(o);
+  stations.sort((a,b)=>a.Name.localeCompare(b.Name)).forEach(x=>{
+    const q=document.createElement("option");
+    q.value=x.StationId; q.textContent=x.Name;
+    if(Number(selectedStation)===x.StationId) q.selected=true;
+    ss.appendChild(q);
+  });
+
+  // Cars come only from SystemLookupCodes where GroupCode is CR.
+  // For Add, default to the first returned CR row.
+  cars.forEach((x,i)=>{
+    const q=document.createElement("option");
+    q.value=x.SLCId; q.textContent=x.Value;
+    if(selectedCar !== null && Number(selectedCar)===x.SLCId) q.selected=true;
+    else if(selectedCar === null && i===0) q.selected=true;
+    cs.appendChild(q);
+  });
 }
+
 async function showPurchases(){
   hidePrimaryScreens(); document.getElementById("purchasesScreen").classList.remove("hidden"); activeArea="purchases";
   document.getElementById("stationsButton").classList.remove("active"); document.getElementById("purchasesButton").classList.add("active");
@@ -647,7 +726,7 @@ async function showPurchaseForm(mode,row=null){
   document.getElementById("purchaseForm").reset(); editingPurchaseId=mode==="change"&&row?row.PurchaseId:null;
   document.getElementById("purchaseFormTitle").textContent=mode==="change"?"Change Purchase":"Add Purchase";
   await loadPurchaseOptions(row?row.Station:null,row?row.Car:null);
-  document.getElementById("purchaseDate").value=row?formatDateDisplay(row.PurchaseDate):todayMaskedDate();
+  document.getElementById("purchaseDate").value=normalizeDateValue(row?formatDateDisplay(row.PurchaseDate):todayMaskedDate());
   if(row){document.getElementById("purchaseGallons").value=Number(row.Gallons).toFixed(3);document.getElementById("purchasePrice").value=Number(row.Price).toFixed(3);document.getElementById("purchaseCost").value=Number(row.Cost).toFixed(2);}
   document.getElementById("purchaseFormMessage").textContent=""; document.getElementById("purchaseStation").focus();
 }
