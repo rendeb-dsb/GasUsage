@@ -1,7 +1,7 @@
 {
-  "name": "Gas Usage b1v32",
+  "name": "Gas Usage b1v33",
   "short_name": "GasUsage",
-  "start_url": "./?v=b1v32",
+  "start_url": "./?v=b1v33",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",

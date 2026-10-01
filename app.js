@@ -220,6 +220,9 @@ document.getElementById("slcForm").addEventListener("submit", async (event) => {
     if (radio) radio.checked = true;
   } catch (err) {
     if (err && err.name === "ConstraintError") {
+      // A constraint error means a matching key already exists. Refresh the list
+      // immediately so an existing record cannot appear to have disappeared.
+      try { await renderRows(); } catch (_) {}
       showMessage("That Order is already used within this Group Code.", "error");
     } else {
       const detail = err && err.message ? err.message : "IndexedDB save failed.";
@@ -293,13 +296,20 @@ document.querySelectorAll("#groupCode, #valueCode").forEach(input => {
 
 // Value deliberately accepts mixed case and has no length limit.
 
-document.getElementById("gearButton").addEventListener("click", () => {
+document.getElementById("gearButton").addEventListener("click", async () => {
   document.getElementById("mainScreen").classList.add("hidden");
   document.getElementById("stationsScreen").classList.add("hidden");
   document.getElementById("stationFormScreen").classList.add("hidden");
   document.getElementById("purchasesScreen").classList.add("hidden");
   document.getElementById("purchaseFormScreen").classList.add("hidden");
   document.getElementById("gearScreen").classList.remove("hidden");
+  showMessage("");
+  try {
+    await getDatabase();
+    await renderRows();
+  } catch (err) {
+    showMessage(err && err.message ? err.message : "Unable to load System Lookup Codes.", "error");
+  }
   document.getElementById("groupCode").focus();
 });
 
