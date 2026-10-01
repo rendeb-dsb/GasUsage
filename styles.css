@@ -413,3 +413,12 @@ th,td { border-color:#8d9092; }
 #purchaseStation { width: calc(100% - 50px) !important; justify-self: start !important; }
 #purchaseCar { width: calc(100% - 60px) !important; justify-self: start !important; }
 #purchaseGallons, #purchasePrice, #purchaseCost { width: calc(100% - 60px) !important; justify-self: start !important; }
+
+
+/* b1v24: Purchase form sizing and calculated Cost behavior. */
+#purchaseDate { width: 168px !important; }
+#purchaseStation { width: 260px !important; }
+#purchaseCar { width: 250px !important; }
+#purchaseGallons, #purchasePrice, #purchaseCost { width: 150px !important; }
+#purchaseCost.calculated-cost { color: #176b2c !important; }
+#purchaseCost.user-cost { color: #111 !important; }

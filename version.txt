@@ -1,4 +1,4 @@
 Gas Usage PWA
-Version: b1v23
+Version: b1v24
 Build: 1
 Version: 23

@@ -721,13 +721,62 @@ async function showPurchases(){
   document.getElementById("stationsButton").classList.remove("active"); document.getElementById("purchasesButton").classList.add("active");
   document.getElementById("purchaseListMessage").textContent=""; await renderPurchases();
 }
+let purchaseCostCalculated = false;
+
+function calculatePurchaseCostIfReady() {
+  const gallonsInput = document.getElementById("purchaseGallons");
+  const priceInput = document.getElementById("purchasePrice");
+  const costInput = document.getElementById("purchaseCost");
+  const gallonsText = gallonsInput.value.trim();
+  const priceText = priceInput.value.trim();
+  if (!gallonsText || !priceText) return;
+  const gallons = Number(gallonsText);
+  const price = Number(priceText);
+  if (!Number.isFinite(gallons) || gallons <= 0 || !Number.isFinite(price) || price <= 0) return;
+  costInput.value = (gallons * price).toFixed(2);
+  costInput.classList.add("calculated-cost");
+  costInput.classList.remove("user-cost");
+  purchaseCostCalculated = true;
+}
+
+function setupPurchaseCostCalculation() {
+  const gallonsInput = document.getElementById("purchaseGallons");
+  const priceInput = document.getElementById("purchasePrice");
+  const costInput = document.getElementById("purchaseCost");
+  [gallonsInput, priceInput].forEach(input => {
+    input.addEventListener("input", () => {
+      calculatePurchaseCostIfReady();
+    });
+  });
+  costInput.addEventListener("focus", () => {
+    // If the displayed value was calculated, select it so the user's first
+    // keystroke replaces it rather than appending to it.
+    if (purchaseCostCalculated) {
+      costInput.select();
+    }
+  });
+  costInput.addEventListener("input", () => {
+    purchaseCostCalculated = false;
+    costInput.classList.remove("calculated-cost");
+    costInput.classList.add("user-cost");
+  });
+}
+
 async function showPurchaseForm(mode,row=null){
   hidePrimaryScreens(); document.getElementById("purchaseFormScreen").classList.remove("hidden");
   document.getElementById("purchaseForm").reset(); editingPurchaseId=mode==="change"&&row?row.PurchaseId:null;
+  purchaseCostCalculated=false;
+  const costInput=document.getElementById("purchaseCost");
+  costInput.classList.remove("calculated-cost","user-cost");
   document.getElementById("purchaseFormTitle").textContent=mode==="change"?"Change Purchase":"Add Purchase";
   await loadPurchaseOptions(row?row.Station:null,row?row.Car:null);
   document.getElementById("purchaseDate").value=normalizeDateValue(row?formatDateDisplay(row.PurchaseDate):todayMaskedDate());
-  if(row){document.getElementById("purchaseGallons").value=Number(row.Gallons).toFixed(3);document.getElementById("purchasePrice").value=Number(row.Price).toFixed(3);document.getElementById("purchaseCost").value=Number(row.Cost).toFixed(2);}
+  if(row){
+    document.getElementById("purchaseGallons").value=Number(row.Gallons).toFixed(3);
+    document.getElementById("purchasePrice").value=Number(row.Price).toFixed(3);
+    costInput.value=Number(row.Cost).toFixed(2);
+    costInput.classList.add("user-cost");
+  }
   document.getElementById("purchaseFormMessage").textContent=""; document.getElementById("purchaseStation").focus();
 }
 function validatePurchase(){
@@ -747,6 +796,7 @@ document.getElementById("purchasesButton").addEventListener("click",showPurchase
 document.getElementById("purchaseCancel").addEventListener("click",showPurchases);
 document.getElementById("purchaseForm").addEventListener("submit",async e=>{e.preventDefault();const [rec,error]=validatePurchase();if(error){document.getElementById("purchaseFormMessage").textContent=error;return;}try{const id=await savePurchase(rec,editingPurchaseId);editingPurchaseId=null;await showPurchases();await renderPurchases(id);}catch(err){document.getElementById("purchaseFormMessage").textContent="The purchase could not be saved.";}});
 setupPurchaseDateMask();
+setupPurchaseCostCalculation();
 
 openDatabase()
   .then(renderRows)
