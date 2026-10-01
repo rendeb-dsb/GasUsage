@@ -1,4 +1,4 @@
 GasUsage
 Build 1
-Version 17
-Displayed version: b1v18
+Version 19
+Displayed version: b1v19
