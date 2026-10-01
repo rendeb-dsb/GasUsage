@@ -1,7 +1,7 @@
 Gas Usage PWA
-Displayed application version: b1v38
+Displayed application version: b1v39
 
-b1v38 changes:
+b1v39 changes:
 - Added a "Show Car:" drop-down to the Purchases screen.
   - First entry is All with hidden value -1 and is the default.
   - Remaining entries come from SystemLookupCodes where GroupCode = CR.
@@ -16,7 +16,7 @@ b1v38 changes:
 - Existing database remains GasUsageDB and is not cleared by this change.
 
 
-b1v38 changes:
+b1v39 changes:
 - Moved the Stations filter to the same line as the Purchases title and right-justified it.
 - Moved the Show Car filter to the line below and right-justified it.
 - Existing filter data sources and filtering logic are unchanged.
