@@ -41,7 +41,7 @@ function openDatabase() {
         purchases.createIndex("Car", "Car", { unique: false });
       }
 
-      // b1v29 safety migration: add only a non-unique lookup index.
+      // b1v30 safety migration: add only a non-unique lookup index.
       // Existing records are never cleared, recreated, or deleted during upgrade.
       const purchaseStore = database.objectStoreNames.contains("Purchases")
         ? event.target.transaction.objectStore("Purchases") : null;
@@ -316,15 +316,24 @@ exportButton.addEventListener("click", async () => {
   actionsButton.setAttribute("aria-expanded", "false");
 
   try {
-    const rows = await getAllRecords();
-    rows.sort((a, b) => a.SLCId - b.SLCId);
+    const [slc, stations, purchases] = await Promise.all([
+      getAllRecords(), getAllStations(), getAllPurchases()
+    ]);
+    slc.sort((a, b) => a.SLCId - b.SLCId);
+    stations.sort((a, b) => a.StationId - b.StationId);
+    purchases.sort((a, b) => a.PurchaseId - b.PurchaseId);
 
     const payload = {
       application: "Gas Usage",
-      table: "SystemLookupCodes",
+      database: DB_NAME,
+      format: "GasUsage-full-database",
       version: 1,
       exportedAt: new Date().toISOString(),
-      records: rows
+      tables: {
+        SystemLookupCodes: slc,
+        Stations: stations,
+        Purchases: purchases
+      }
     };
 
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
@@ -333,13 +342,13 @@ exportButton.addEventListener("click", async () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "SystemLookupCodes.json";
+    link.download = "GasUsage.json";
     document.body.appendChild(link);
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
   } catch {
-    showMessage("The JSON file could not be exported.", "error");
+    showMessage("The Gas Usage database could not be exported.", "error");
   }
 });
 
@@ -350,6 +359,89 @@ importButton.addEventListener("click", () => {
   jsonFileInput.click();
 });
 
+function validateFullImport(payload) {
+  if (!payload || typeof payload !== "object" || !payload.tables) {
+    throw new Error("The JSON file is not a complete Gas Usage database export.");
+  }
+
+  const tables = payload.tables;
+  const slc = Array.isArray(tables.SystemLookupCodes) ? tables.SystemLookupCodes : null;
+  const stations = Array.isArray(tables.Stations) ? tables.Stations : null;
+  const purchases = Array.isArray(tables.Purchases) ? tables.Purchases : null;
+  if (!slc || !stations || !purchases) {
+    throw new Error("The JSON file must contain SystemLookupCodes, Stations, and Purchases.");
+  }
+
+  const slcIds = new Set();
+  const groupOrders = new Set();
+  const slcById = new Map();
+  const normalizedSLC = slc.map(row => {
+    const SLCId = Number(row.SLCId), Order = Number(row.Order);
+    const GroupCode = String(row.GroupCode ?? "").trim().toUpperCase();
+    const ValueCode = String(row.ValueCode ?? "").trim().toUpperCase();
+    const Value = String(row.Value ?? "");
+    if (!Number.isInteger(SLCId) || SLCId < 1) throw new Error("Invalid SLCId.");
+    if (!/^[A-Z]{2}$/.test(GroupCode)) throw new Error("Invalid GroupCode.");
+    if (!Number.isInteger(Order) || Order < 1) throw new Error("Invalid Order.");
+    if (!/^[A-Z]{2}$/.test(ValueCode)) throw new Error("Invalid ValueCode.");
+    if (!Value) throw new Error("Value is required.");
+    if (slcIds.has(SLCId)) throw new Error("Duplicate SLCId.");
+    const key = GroupCode + "\u0000" + Order;
+    if (groupOrders.has(key)) throw new Error("Duplicate GroupCode + Order.");
+    slcIds.add(SLCId); groupOrders.add(key);
+    const out = {SLCId, GroupCode, Order, ValueCode, Value};
+    slcById.set(SLCId, out);
+    return out;
+  });
+
+  const stationIds = new Set();
+  const stationNames = new Set();
+  const normalizedStations = stations.map(row => {
+    const StationId = Number(row.StationId);
+    const Name = String(row.Name ?? "").trim();
+    const Brand = Number(row.Brand);
+    const Address1 = String(row.Address1 ?? "").trim();
+    const Address2 = String(row.Address2 ?? "").trim();
+    const City = String(row.City ?? "").trim();
+    const State = String(row.State ?? "").trim().toUpperCase();
+    const Zip = String(row.Zip ?? "").trim();
+    if (!Number.isInteger(StationId) || StationId < 1) throw new Error("Invalid StationId.");
+    if (Name.length < 1) throw new Error("Station Name is required.");
+    if (stationIds.has(StationId)) throw new Error("Duplicate StationId.");
+    if (stationNames.has(Name)) throw new Error("Duplicate Station Name.");
+    if (!slcById.has(Brand) || slcById.get(Brand).GroupCode !== "BR") throw new Error("Invalid Station Brand reference.");
+    if (!Address1) throw new Error("Station Address1 is required.");
+    if (!City) throw new Error("Station City is required.");
+    if (!/^[A-Z]{2}$/.test(State)) throw new Error("Invalid Station State.");
+    if (!/^\d{5}$/.test(Zip)) throw new Error("Invalid Station Zip.");
+    stationIds.add(StationId); stationNames.add(Name);
+    return {StationId, Name, Brand, Address1, Address2, City, State, Zip};
+  });
+
+  const purchaseIds = new Set();
+  const normalizedPurchases = purchases.map(row => {
+    const PurchaseId = Number(row.PurchaseId);
+    const PurchaseDate = String(row.PurchaseDate ?? "");
+    const Station = Number(row.Station);
+    const Car = Number(row.Car);
+    const Gallons = Number(Number(row.Gallons).toFixed(3));
+    const Price = Number(Number(row.Price).toFixed(3));
+    const Cost = Number(Number(row.Cost).toFixed(2));
+    if (!Number.isInteger(PurchaseId) || PurchaseId < 1) throw new Error("Invalid PurchaseId.");
+    if (purchaseIds.has(PurchaseId)) throw new Error("Duplicate PurchaseId.");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(PurchaseDate)) throw new Error("Invalid Purchase Date.");
+    if (!stationIds.has(Station)) throw new Error("Invalid Purchase Station reference.");
+    if (!slcById.has(Car) || slcById.get(Car).GroupCode !== "CR") throw new Error("Invalid Purchase Car reference.");
+    if (!Number.isFinite(Gallons) || Gallons <= 0 || Gallons > 50) throw new Error("Invalid Gallons value.");
+    if (!Number.isFinite(Price) || Price <= 0 || Price > 10) throw new Error("Invalid Price value.");
+    if (!Number.isFinite(Cost) || Cost < 0 || Cost > 99) throw new Error("Invalid Cost value.");
+    purchaseIds.add(PurchaseId);
+    return {PurchaseId, PurchaseDate, Station, Car, Gallons, Price, Cost};
+  });
+
+  return {SystemLookupCodes: normalizedSLC, Stations: normalizedStations, Purchases: normalizedPurchases};
+}
+
 jsonFileInput.addEventListener("change", async () => {
   const file = jsonFileInput.files[0];
   if (!file) return;
@@ -357,44 +449,18 @@ jsonFileInput.addEventListener("change", async () => {
   try {
     const text = await file.text();
     const payload = JSON.parse(text);
-    const records = Array.isArray(payload) ? payload : payload.records;
-    if (!Array.isArray(records)) throw new Error("JSON does not contain a records array.");
-
-    const normalized = records.map(row => {
-      const slcId = Number(row.SLCId);
-      const order = Number(row.Order);
-      const groupCode = String(row.GroupCode ?? "").trim().toUpperCase();
-      const valueCode = String(row.ValueCode ?? "").trim().toUpperCase();
-      const value = String(row.Value ?? "");
-
-      if (!Number.isInteger(slcId) || slcId < 1) throw new Error("Invalid SLCId.");
-      if (!/^[A-Z]{2}$/.test(groupCode)) throw new Error("Invalid GroupCode.");
-      if (!Number.isInteger(order) || order < 1) throw new Error("Invalid Order.");
-      if (!/^[A-Z]{2}$/.test(valueCode)) throw new Error("Invalid ValueCode.");
-      if (!value) throw new Error("Value is required.");
-
-      return { SLCId: slcId, GroupCode: groupCode, Order: order, ValueCode: valueCode, Value: value };
-    });
-
-    const ids = new Set();
-    const groupOrders = new Set();
-    for (const row of normalized) {
-      if (ids.has(row.SLCId)) throw new Error("Duplicate SLCId.");
-      ids.add(row.SLCId);
-      const key = row.GroupCode + "\u0000" + row.Order;
-      if (groupOrders.has(key)) throw new Error("Duplicate GroupCode + Order.");
-      groupOrders.add(key);
-    }
-
-    const confirmed = window.confirm
-      ? window.confirm("Import this JSON file and replace the current SystemLookupCodes data?")
-      : false;
+    const tables = validateFullImport(payload);
+    const confirmed = window.confirm("Import this Gas Usage database and replace all current data in all three tables?");
     if (!confirmed) return;
 
-    const tx = db.transaction(STORE_NAME, "readwrite");
-    const store = tx.objectStore(STORE_NAME);
-    store.clear();
-    for (const row of normalized) store.put(row);
+    const tx = db.transaction(["SystemLookupCodes", "Stations", "Purchases"], "readwrite");
+    const slcStore = tx.objectStore("SystemLookupCodes");
+    const stationStore = tx.objectStore("Stations");
+    const purchaseStore = tx.objectStore("Purchases");
+    slcStore.clear(); stationStore.clear(); purchaseStore.clear();
+    for (const row of tables.SystemLookupCodes) slcStore.put(row);
+    for (const row of tables.Stations) stationStore.put(row);
+    for (const row of tables.Purchases) purchaseStore.put(row);
 
     await new Promise((resolve, reject) => {
       tx.oncomplete = resolve;
@@ -402,11 +468,15 @@ jsonFileInput.addEventListener("change", async () => {
       tx.onabort = () => reject(tx.error || new Error("Import aborted."));
     });
 
-    clearEntryFields(false);
+    editingId = null;
+    editingStationId = null;
+    editingPurchaseId = null;
     await renderRows();
-    showMessage("JSON data imported.", "ok");
+    if (activeArea === "stations") await renderStations();
+    if (activeArea === "purchases") await renderPurchases();
+    showMessage("Gas Usage database imported.", "ok");
   } catch (err) {
-    showMessage("The JSON file could not be imported: " + err.message, "error");
+    showMessage("The Gas Usage database could not be imported: " + err.message, "error");
   } finally {
     jsonFileInput.value = "";
   }
