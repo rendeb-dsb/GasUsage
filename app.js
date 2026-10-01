@@ -808,13 +808,62 @@ function setupPurchaseDateMask() {
 }
 
 function stationNameMap(rows){return new Map(rows.map(s=>[s.StationId,s.Name]));}
+async function loadPurchaseFilters(selectedCar="-1", selectedStationBrand="-1") {
+  const [cars, brands] = await Promise.all([getCarCodes(), getBrandCodes()]);
+  const carSelect = document.getElementById("showCarFilter");
+  const stationSelect = document.getElementById("stationFilter");
+  if (!carSelect || !stationSelect) return;
+
+  carSelect.innerHTML = "";
+  stationSelect.innerHTML = "";
+
+  const allCar = document.createElement("option");
+  allCar.value = "-1";
+  allCar.textContent = "All";
+  allCar.selected = String(selectedCar) === "-1";
+  carSelect.appendChild(allCar);
+  cars.sort((a,b) => a.Order - b.Order || a.SLCId - b.SLCId).forEach(row => {
+    const option = document.createElement("option");
+    option.value = String(row.SLCId);
+    option.textContent = row.Value;
+    option.selected = String(selectedCar) === String(row.SLCId);
+    carSelect.appendChild(option);
+  });
+
+  const allStation = document.createElement("option");
+  allStation.value = "-1";
+  allStation.textContent = "All";
+  allStation.selected = String(selectedStationBrand) === "-1";
+  stationSelect.appendChild(allStation);
+  brands.sort((a,b) => a.Order - b.Order || a.SLCId - b.SLCId).forEach(row => {
+    const option = document.createElement("option");
+    option.value = String(row.SLCId);
+    option.textContent = row.Value;
+    option.selected = String(selectedStationBrand) === String(row.SLCId);
+    stationSelect.appendChild(option);
+  });
+}
+
 async function renderPurchases(selected=null) {
   const [rows,stations,cars]=await Promise.all([getAllPurchases(),getAllStations(),getCarCodes()]);
   const sm=stationNameMap(stations);
   const cm=new Map(cars.map(c=>[c.SLCId,c.Value]));
-  rows.sort((a,b)=>String(b.PurchaseDate).localeCompare(String(a.PurchaseDate)) || b.PurchaseId-a.PurchaseId);
+  const selectedCar=document.getElementById("showCarFilter")?.value ?? "-1";
+  const selectedStationBrand=document.getElementById("stationFilter")?.value ?? "-1";
+  const stationMap=new Map(stations.map(s=>[s.StationId,s]));
+
+  const filtered=rows.filter(row=>{
+    if(selectedCar!=="-1" && Number(row.Car)!==Number(selectedCar)) return false;
+    if(selectedStationBrand!=="-1") {
+      const station=stationMap.get(Number(row.Station));
+      if(!station || Number(station.Brand)!==Number(selectedStationBrand)) return false;
+    }
+    return true;
+  });
+
+  filtered.sort((a,b)=>String(b.PurchaseDate).localeCompare(String(a.PurchaseDate)) || b.PurchaseId-a.PurchaseId);
   const body=document.getElementById("purchaseRows"); body.innerHTML="";
-  for(const row of rows){
+  for(const row of filtered){
     const tr=document.createElement("tr");
     const td0=document.createElement("td"); td0.className="radio-column";
     const radio=document.createElement("input"); radio.type="radio"; radio.name="selectedPurchase"; radio.value=row.PurchaseId;
@@ -853,7 +902,11 @@ async function loadPurchaseOptions(selectedStation=null,selectedCar=null){
 async function showPurchases(){
   hidePrimaryScreens(); document.getElementById("purchasesScreen").classList.remove("hidden"); activeArea="purchases";
   document.getElementById("stationsButton").classList.remove("active"); document.getElementById("purchasesButton").classList.add("active");
-  document.getElementById("purchaseListMessage").textContent=""; await renderPurchases();
+  document.getElementById("purchaseListMessage").textContent="";
+  const selectedCar=document.getElementById("showCarFilter")?.value || "-1";
+  const selectedStationBrand=document.getElementById("stationFilter")?.value || "-1";
+  await loadPurchaseFilters(selectedCar, selectedStationBrand);
+  await renderPurchases();
 }
 let purchaseCostCalculated = false;
 
@@ -951,6 +1004,8 @@ function validatePurchase(){
   return [{PurchaseDate:date,Station:station,Car:car,Gallons:Number(gallons.toFixed(3)),Price:Number(price.toFixed(3)),Cost:Number(cost.toFixed(2))},""];
 }
 
+document.getElementById("showCarFilter").addEventListener("change", async () => { await renderPurchases(); });
+document.getElementById("stationFilter").addEventListener("change", async () => { await renderPurchases(); });
 document.getElementById("purchasesButton").addEventListener("click",showPurchases);
 document.getElementById("purchaseCancel").addEventListener("click",showPurchases);
 document.getElementById("gasPurchaseModalOk").addEventListener("click",hideGasPurchaseMessage);

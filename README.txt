@@ -1,8 +1,16 @@
 Gas Usage PWA
-Displayed application version: b1v36
+Displayed application version: b1v37
 
-b1v36 corrective change:
-- The System Lookup Codes screen now reloads its saved-record list every time the gear screen is opened.
-- If a Save encounters the unique GroupCode/Order constraint, the saved-record list is refreshed immediately so an existing record is visible instead of appearing to be missing.
-- No database stores are cleared by this change.
-- Database remains GasUsageDB.
+b1v37 changes:
+- Added a "Show Car:" drop-down to the Purchases screen.
+  - First entry is All with hidden value -1 and is the default.
+  - Remaining entries come from SystemLookupCodes where GroupCode = CR.
+  - Hidden value is SLCId.
+- Added a "Stations:" drop-down to the right of Show Car.
+  - First entry is All with hidden value -1 and is the default.
+  - Remaining entries come from SystemLookupCodes where GroupCode = BR.
+  - Hidden value is SLCId.
+  - Entries are sorted by the SystemLookupCodes Order field.
+- The two filters update the Purchases list when changed.
+- The Stations filter uses the selected BR SLCId to show purchases made at Stations having that Brand.
+- Existing database remains GasUsageDB and is not cleared by this change.
