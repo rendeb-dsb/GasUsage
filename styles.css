@@ -423,7 +423,7 @@ th,td { border-color:#8d9092; }
 #purchaseCost.calculated-cost { color: #176b2c !important; }
 #purchaseCost.user-cost { color: #111 !important; }
 
-/* b1v25: Force the requested purchase-control widths.  The controls are
+/* b1v26: Force the requested purchase-control widths.  The controls are
    grid children, so explicitly constrain min/max width as well as width
    and prevent grid stretching. */
 .purchase-form-grid #purchaseDate,
@@ -443,3 +443,11 @@ th,td { border-color:#8d9092; }
 .purchase-form-grid #purchaseGallons,
 .purchase-form-grid #purchasePrice,
 .purchase-form-grid #purchaseCost { width: 150px !important; }
+
+/* b1v26: final requested Purchase form control widths. */
+.purchase-form-grid #purchaseDate { width: 120px !important; min-width: 120px !important; max-width: 120px !important; justify-self: start !important; box-sizing: border-box !important; }
+.purchase-form-grid #purchaseStation,
+.purchase-form-grid #purchaseCar { width: 150px !important; min-width: 150px !important; max-width: 150px !important; justify-self: start !important; box-sizing: border-box !important; }
+.purchase-form-grid #purchaseGallons,
+.purchase-form-grid #purchasePrice,
+.purchase-form-grid #purchaseCost { width: 80px !important; min-width: 80px !important; max-width: 80px !important; justify-self: start !important; box-sizing: border-box !important; }
