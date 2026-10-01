@@ -319,3 +319,21 @@ td input[type="radio"] {
   overflow-wrap: anywhere !important;
   word-break: break-word !important;
 }
+
+/* b1v17: SLC list columns. Radio and Value remain unchanged. */
+.slc-table {
+  table-layout: auto !important;
+}
+.slc-table th:nth-child(2),
+.slc-table td:nth-child(2),
+.slc-table th:nth-child(3),
+.slc-table td:nth-child(3),
+.slc-table th:nth-child(4),
+.slc-table td:nth-child(4),
+.slc-table th:nth-child(5),
+.slc-table td:nth-child(5) {
+  width: 100px !important;
+  min-width: 100px !important;
+  max-width: 100px !important;
+  box-sizing: border-box !important;
+}

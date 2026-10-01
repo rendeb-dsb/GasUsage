@@ -1,6 +1,6 @@
-GasUsage PWA - Build 1 Version 16
+GasUsage PWA - Build 1 Version 17
 
-Displayed application version: b1v16
+Displayed application version: b1v17
 ZIP/build version: 7
 
 This build uses IndexedDB.
@@ -26,22 +26,25 @@ JSON:
 - Actions > Import accepts an exported JSON file and replaces the current SLC data after confirmation.
 
 
-b1v16 layout: all four SLC data-entry boxes share one left edge; each label is immediately followed by its associated box with a 10px gap.
+b1v17 layout: all four SLC data-entry boxes share one left edge; each label is immediately followed by its associated box with a 10px gap.
 
 
-b1v16: Each data-entry box is positioned exactly 10px after its associated label.
+b1v17: Each data-entry box is positioned exactly 10px after its associated label.
 
-b1v16 layout changes:
+b1v17 layout changes:
 - Save/Clear moved upward 10px; the three small record buttons remain in place.
 - A horizontal separator is placed 8px above the three small record buttons.
 - The first five list columns are set to 15px wide; Value remains unchanged.
 
-b1v16 cache/update change:
-- index.html explicitly displays b1v16.
-- CSS and JavaScript URLs are versioned with ?v=b1v16.
-- The PWA start URL uses ?v=b1v16 so the installed app gets a new URL/cache key.
+b1v17 cache/update change:
+- index.html explicitly displays b1v17.
+- CSS and JavaScript URLs are versioned with ?v=b1v17.
+- The PWA start URL uses ?v=b1v17 so the installed app gets a new URL/cache key.
 
-b1v16 corrections:
+b1v17 corrections:
 - Save/Clear moved up exactly 10px without moving the three small record buttons.
 - A viewport-width horizontal separator is positioned 8px above the three small record buttons without changing their location.
 - SLCId, Group Code, Order, and Value Code list columns are forced to 15px; Value is unchanged.
+
+
+b1v17: SLCId, Group Code, Order, and Value Code are each 100px wide. Radio and Value columns are unchanged.
