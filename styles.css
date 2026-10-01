@@ -468,19 +468,32 @@ th,td { border-color:#8d9092; }
 .modal-title { font-weight: 700; font-size: 20px; margin-bottom: 12px; }
 
 
-/* b1v37: Purchase list filters */
-.purchase-filters {
+/* b1v38: Purchase list filter layout.
+   Stations is on the same line as the Purchases title and right-justified.
+   Show Car is on the following line and right-justified. */
+.purchases-title-row {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 8px 10px;
-  margin: 8px 0 14px;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
 }
-.purchase-filters label {
+.purchases-title-row h2 {
+  margin: 0;
+}
+.purchase-filter-block {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 0;
+}
+.purchase-filter-block label {
   font-size: 15px;
   white-space: nowrap;
 }
-.purchase-filters select {
+.purchase-filter-block select {
   height: 36px;
   border: 1px solid #777;
   border-radius: 3px;
@@ -488,9 +501,16 @@ th,td { border-color:#8d9092; }
   font-size: 16px;
   background: #fff;
 }
-#showCarFilter { width: 150px; }
-#stationFilter { width: 150px; }
+#showCarFilter, #stationFilter { width: 150px; }
+.car-filter-block {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 8px 0 14px;
+}
 @media (max-width: 620px) {
-  .purchase-filters { gap: 7px 8px; }
+  .purchases-title-row {
+    gap: 8px;
+  }
   #showCarFilter, #stationFilter { width: 140px; }
+  .purchase-filter-block label { font-size: 15px; }
 }
