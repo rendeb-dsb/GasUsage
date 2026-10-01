@@ -451,3 +451,15 @@ th,td { border-color:#8d9092; }
 .purchase-form-grid #purchaseGallons,
 .purchase-form-grid #purchasePrice,
 .purchase-form-grid #purchaseCost { width: 80px !important; min-width: 80px !important; max-width: 80px !important; justify-self: start !important; box-sizing: border-box !important; }
+
+/* b1v27: widen Station and Car controls by 20px from b1v26. */
+.purchase-form-grid #purchaseStation { width: 170px !important; min-width: 170px !important; max-width: 170px !important; }
+.purchase-form-grid #purchaseCar { width: 170px !important; min-width: 170px !important; max-width: 170px !important; }
+
+/* b1v27: custom Gas Purchase message dialog; no browser/system message chrome. */
+.gas-purchase-modal.hidden { display: none; }
+.gas-purchase-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.38); padding: 20px; box-sizing: border-box; }
+.gas-purchase-dialog { width: min(360px, 100%); background: #4b4f52; color: #fff; border: 1px solid #8d9092; border-radius: 6px; box-shadow: 0 6px 24px rgba(0,0,0,.45); padding: 18px; box-sizing: border-box; }
+.gas-purchase-dialog h3 { margin: 0 0 14px; font-size: 20px; color: #fff; }
+.gas-purchase-dialog p { margin: 0 0 18px; line-height: 1.4; }
+.gas-purchase-dialog button { min-width: 82px; padding: 8px 16px; border: 1px solid #777; border-radius: 4px; background: #d2d2d2; color: #111; font-size: 16px; }

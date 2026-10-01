@@ -779,6 +779,31 @@ async function showPurchaseForm(mode,row=null){
   }
   document.getElementById("purchaseFormMessage").textContent=""; document.getElementById("purchaseStation").focus();
 }
+function showGasPurchaseMessage(message) {
+  const modal = document.getElementById("gasPurchaseModal");
+  document.getElementById("gasPurchaseModalMessage").textContent = message;
+  modal.classList.remove("hidden");
+  document.getElementById("gasPurchaseModalOk").focus();
+}
+
+function hideGasPurchaseMessage() {
+  document.getElementById("gasPurchaseModal").classList.add("hidden");
+}
+
+async function isDuplicatePurchase(stationId, purchaseDate, gallons, excludeId = null) {
+  const [purchases, stations] = await Promise.all([getAllPurchases(), getAllStations()]);
+  const station = stations.find(s => s.StationId === stationId);
+  const stationName = station ? String(station.Name) : "";
+  const targetGallons = Number(Number(gallons).toFixed(3));
+  return purchases.some(p => {
+    if (excludeId !== null && Number(p.PurchaseId) === Number(excludeId)) return false;
+    const pStation = stations.find(s => s.StationId === Number(p.Station));
+    return pStation && String(pStation.Name) === stationName
+      && String(p.PurchaseDate) === String(purchaseDate)
+      && Number(Number(p.Gallons).toFixed(3)) === targetGallons;
+  });
+}
+
 function validatePurchase(){
   const date=maskedDateToISO(document.getElementById("purchaseDate").value);
   const station=Number(document.getElementById("purchaseStation").value), car=Number(document.getElementById("purchaseCar").value);
@@ -794,7 +819,21 @@ function validatePurchase(){
 
 document.getElementById("purchasesButton").addEventListener("click",showPurchases);
 document.getElementById("purchaseCancel").addEventListener("click",showPurchases);
-document.getElementById("purchaseForm").addEventListener("submit",async e=>{e.preventDefault();const [rec,error]=validatePurchase();if(error){document.getElementById("purchaseFormMessage").textContent=error;return;}try{const id=await savePurchase(rec,editingPurchaseId);editingPurchaseId=null;await showPurchases();await renderPurchases(id);}catch(err){document.getElementById("purchaseFormMessage").textContent="The purchase could not be saved.";}});
+document.getElementById("gasPurchaseModalOk").addEventListener("click",hideGasPurchaseMessage);
+document.getElementById("gasPurchaseModal").addEventListener("click",e=>{if(e.target.id==="gasPurchaseModal")hideGasPurchaseMessage();});
+document.getElementById("purchaseForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const [rec,error]=validatePurchase();
+  if(error){document.getElementById("purchaseFormMessage").textContent=error;return;}
+  try{
+    if(await isDuplicatePurchase(rec.Station,rec.PurchaseDate,rec.Gallons,editingPurchaseId)){
+      showGasPurchaseMessage("This purchase is a duplicate of an existing purchase based on Station Name, Purchase Date, and Gallons.");
+      return;
+    }
+    const id=await savePurchase(rec,editingPurchaseId);
+    editingPurchaseId=null;await showPurchases();await renderPurchases(id);
+  }catch(err){document.getElementById("purchaseFormMessage").textContent="The purchase could not be saved.";}
+});
 setupPurchaseDateMask();
 setupPurchaseCostCalculation();
 
