@@ -1,6 +1,6 @@
 GasUsage PWA - Build 1 Version 24
 
-Displayed application version: b1v27
+Displayed application version: b1v28
 ZIP/build version: 24
 
 This build uses IndexedDB.
@@ -50,12 +50,12 @@ b1v18 corrections:
 b1v18: SLCId, Group Code, Order, and Value Code are each 100px wide. Radio and Value columns are unchanged.
 
 
-b1v27 layout changes:
+b1v28 layout changes:
 - The Close button is now below the Saved System Lookup Codes list, left-justified with a 20px left margin and 20px top margin.
 - Save/Clear moved upward 15px; all content below those buttons moves upward with them.
 - The four SLC list columns remain 50px wide; radio and Value columns are unchanged.
 
-b1v27 Stations table
+b1v28 Stations table
 --------------------
 IndexedDB object store: Stations
 - StationId: primary key, unique whole number, auto-generated starting at 1
@@ -70,20 +70,20 @@ IndexedDB object store: Stations
 The Stations object store is added by the IndexedDB version-2 migration and does not alter existing SystemLookupCodes records.
 
 
-b1v27 changes:
+b1v28 changes:
 - Purchase Car dropdown now loads only SystemLookupCodes rows with GroupCode CR.
 - The first CR row is selected by default when adding a purchase.
 - Purchase entry controls shortened as requested: Date 25px, Station 50px, Car 60px, and Gallons/Price/Cost 60px.
 - Purchase Date uses a fixed MM/DD/20YY mask; slash separators and the “20” are not deletable. Backspace deletes the prior editable digit and leaves the cursor in that digit position.
 
 
-b1v27 cost behavior:
+b1v28 cost behavior:
 - When both Gallons and Price contain positive numeric values, Cost is calculated as Gallons x Price and displayed to two decimal places in green.
 - If the user edits Cost, the calculated value is replaced by the user's value and displayed in black.
 - The value displayed in Cost is the value saved regardless of display color.
 - Existing saved Cost values on Change are treated as user-entered values.
 
-b1v27 purchase-control widths:
+b1v28 purchase-control widths:
 - Purchase Date: 120px
 - Station: 150px
 - Car: 150px
@@ -91,7 +91,7 @@ b1v27 purchase-control widths:
 - Price: 80px
 - Cost: 80px
 
-b1v27 changes:
+b1v28 changes:
 - Station and Car controls on the Purchase form widened to 170px.
 - Purchase Save now checks for duplicates using Station Name, Purchase Date, and Gallons; a duplicate is blocked.
 - Duplicate notification uses an in-app dialog titled "Gas Purchase" rather than browser/system message chrome.

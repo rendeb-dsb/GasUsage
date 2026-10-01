@@ -1,5 +1,5 @@
 const DB_NAME = "GasUsageDB";
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const STORE_NAME = "SystemLookupCodes";
 
 let db;
@@ -40,13 +40,23 @@ function openDatabase() {
         purchases.createIndex("Station", "Station", { unique: false });
         purchases.createIndex("Car", "Car", { unique: false });
       }
+
+      // b1v28 safety migration: add only a non-unique lookup index.
+      // Existing records are never cleared, recreated, or deleted during upgrade.
+      const purchaseStore = database.objectStoreNames.contains("Purchases")
+        ? event.target.transaction.objectStore("Purchases") : null;
+      if (purchaseStore && !purchaseStore.indexNames.contains("Station_Date_Gallons")) {
+        purchaseStore.createIndex("Station_Date_Gallons", ["Station", "PurchaseDate", "Gallons"], { unique: false });
+      }
     };
 
     request.onsuccess = () => {
       db = request.result;
+      db.onversionchange = () => {};
       resolve(db);
     };
-    request.onerror = () => reject(request.error);
+    request.onblocked = () => reject(new Error("The existing Gas Usage database is busy."));
+    request.onerror = () => reject(request.error || new Error("Unable to open Gas Usage database."));
   });
 }
 
@@ -838,5 +848,10 @@ setupPurchaseDateMask();
 setupPurchaseCostCalculation();
 
 openDatabase()
-  .then(renderRows)
-  .catch(() => showMessage("Unable to open the IndexedDB data store.", "error"));
+  .then(async database => {
+    const required = ["SystemLookupCodes", "Stations", "Purchases"];
+    const missing = required.filter(name => !database.objectStoreNames.contains(name));
+    if (missing.length) throw new Error("Missing data table: " + missing.join(", "));
+    await renderRows();
+  })
+  .catch(err => showMessage(err && err.message ? err.message : "Unable to open the IndexedDB data store.", "error"));
