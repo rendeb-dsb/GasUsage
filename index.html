@@ -7,11 +7,11 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="theme-color" content="#ffffff">
-<title>Gas Usage b1v21</title>
+<title>Gas Usage b1v22</title>
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="styles.css?v=b1v21">
-<style id="b1v21-layout-fix">
-/* b1v21 layout corrections */
+<link rel="stylesheet" href="styles.css?v=b1v22">
+<style id="b1v22-layout-fix">
+/* b1v22 layout corrections */
 .entry-grid { grid-template-columns: 105px 40px 86px minmax(80px, 1fr) !important; }
 .short-input {
   width: 40px !important;
@@ -43,8 +43,8 @@
 }
 </style>
 
-<style id="b1v21-entry-layout">
-/* b1v21: exact entry alignment requested by the user.
+<style id="b1v22-entry-layout">
+/* b1v22: exact entry alignment requested by the user.
    Content starts at the existing 12px main padding.
    Column starts are: label 24px, short boxes 124px, second label 311px,
    second set of boxes 400px on the phone layout. */
@@ -97,8 +97,8 @@
 </style>
 
 
-<style id="b1v21-entry-layout">
-/* b1v21: each input is exactly 10px from its own label. */
+<style id="b1v22-entry-layout">
+/* b1v22: each input is exactly 10px from its own label. */
 .entry-grid {
   display: flex !important;
   flex-direction: column !important;
@@ -143,7 +143,7 @@
 <div class="app">
   <header class="topbar opening-header">
     <div class="title-line">
-      <span class="version">b1v21</span>
+      <span class="version">b1v22</span>
       <span class="app-title">Gas Usage</span>
       <button id="gearButton" class="gear-button" aria-label="System Lookup Codes">⚙</button>
     </div>
@@ -151,15 +151,16 @@
       <div class="menu-area">
         <button id="actionsButton" class="menu-entry" aria-haspopup="true" aria-expanded="false">Actions</button>
         <div id="actionsMenu" class="submenu hidden">
-          <button id="stationAddAction" class="submenu-item">Add</button>
-          <button id="stationChangeAction" class="submenu-item">Change</button>
-          <button id="stationDeleteAction" class="submenu-item">Delete</button>
+          <button id="addAction" class="submenu-item">Add</button>
+          <button id="changeAction" class="submenu-item">Change</button>
+          <button id="deleteAction" class="submenu-item">Delete</button>
           <div class="submenu-separator" role="separator"></div>
           <button id="importButton" class="submenu-item">Import</button>
           <button id="exportButton" class="submenu-item">Export</button>
         </div>
       </div>
       <button id="stationsButton" class="menu-entry">Stations</button>
+      <button id="purchasesButton" class="menu-entry">Purchases</button>
     </nav>
   </header>
 
@@ -177,6 +178,33 @@
           <tbody id="stationRows"></tbody>
         </table>
       </div>
+    </section>
+
+    <section id="purchasesScreen" class="screen hidden">
+      <h2>Purchases</h2>
+      <div id="purchaseListMessage" class="message" aria-live="polite"></div>
+      <div class="table-wrap">
+        <table class="purchases-table">
+          <thead><tr><th class="radio-column"></th><th>Station<br>Name</th><th>Purchase<br>Date</th><th>Gallons</th><th>Price</th><th>Cost</th></tr></thead>
+          <tbody id="purchaseRows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="purchaseFormScreen" class="screen hidden">
+      <h2 id="purchaseFormTitle">Add Purchase</h2>
+      <form id="purchaseForm" novalidate>
+        <div class="purchase-form-grid">
+          <label for="purchaseDate">Purchase Date:</label><input id="purchaseDate" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="mm/dd/20yy" required>
+          <label for="purchaseStation">Station:</label><select id="purchaseStation" required></select>
+          <label for="purchaseCar">Car:</label><select id="purchaseCar" required></select>
+          <label for="purchaseGallons">Gallons:</label><input id="purchaseGallons" type="number" min="0.001" max="50" step="0.001" inputmode="decimal" required>
+          <label for="purchasePrice">Price:</label><input id="purchasePrice" type="number" min="0.001" max="10" step="0.001" inputmode="decimal" required>
+          <label for="purchaseCost">Cost:</label><input id="purchaseCost" type="number" min="0.01" max="99" step="0.01" inputmode="decimal" required>
+        </div>
+        <div id="purchaseFormMessage" class="message" aria-live="polite"></div>
+        <div class="purchase-form-buttons"><button type="submit" class="action-button">Save</button><button type="button" id="purchaseCancel" class="action-button">Cancel</button></div>
+      </form>
     </section>
 
     <section id="stationFormScreen" class="screen hidden">
@@ -267,6 +295,6 @@
     </div>
   </div>
 </div>
-<script src="app.js?v=b1v21"></script>
+<script src="app.js?v=b1v22"></script>
 </body>
 </html>

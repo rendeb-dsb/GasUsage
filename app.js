@@ -1,5 +1,5 @@
 const DB_NAME = "GasUsageDB";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORE_NAME = "SystemLookupCodes";
 
 let db;
@@ -20,7 +20,7 @@ function openDatabase() {
         store.createIndex("GroupCode_Order", ["GroupCode", "Order"], { unique: true });
       }
 
-      // b1v21: add the Stations table without changing existing SLC data.
+      // b1v22: add the Stations table without changing existing SLC data.
       if (!database.objectStoreNames.contains("Stations")) {
         const stations = database.createObjectStore("Stations", {
           keyPath: "StationId",
@@ -28,6 +28,17 @@ function openDatabase() {
         });
         stations.createIndex("Name", "Name", { unique: true });
         stations.createIndex("Brand", "Brand", { unique: false });
+      }
+
+      // b1v22: add the Purchases table without changing existing data.
+      if (!database.objectStoreNames.contains("Purchases")) {
+        const purchases = database.createObjectStore("Purchases", {
+          keyPath: "PurchaseId",
+          autoIncrement: true
+        });
+        purchases.createIndex("PurchaseDate", "PurchaseDate", { unique: false });
+        purchases.createIndex("Station", "Station", { unique: false });
+        purchases.createIndex("Car", "Car", { unique: false });
       }
     };
 
@@ -258,6 +269,8 @@ document.getElementById("gearButton").addEventListener("click", () => {
   document.getElementById("mainScreen").classList.add("hidden");
   document.getElementById("stationsScreen").classList.add("hidden");
   document.getElementById("stationFormScreen").classList.add("hidden");
+  document.getElementById("purchasesScreen").classList.add("hidden");
+  document.getElementById("purchaseFormScreen").classList.add("hidden");
   document.getElementById("gearScreen").classList.remove("hidden");
   document.getElementById("groupCode").focus();
 });
@@ -265,6 +278,7 @@ document.getElementById("gearButton").addEventListener("click", () => {
 document.getElementById("closeGear").addEventListener("click", () => {
   document.getElementById("gearScreen").classList.add("hidden");
   if (activeArea === "stations") document.getElementById("stationsScreen").classList.remove("hidden");
+  else if (activeArea === "purchases") document.getElementById("purchasesScreen").classList.remove("hidden");
   else document.getElementById("mainScreen").classList.remove("hidden");
 });
 
@@ -390,12 +404,12 @@ jsonFileInput.addEventListener("change", async () => {
 
 
 
-// b1v21 Stations UI and data handling.
+// b1v22 Stations UI and data handling.
 let activeArea = "main";
 let editingStationId = null;
 
 function hidePrimaryScreens() {
-  ["mainScreen", "stationsScreen", "stationFormScreen", "gearScreen"].forEach(id =>
+  ["mainScreen", "stationsScreen", "stationFormScreen", "purchasesScreen", "purchaseFormScreen", "gearScreen"].forEach(id =>
     document.getElementById(id).classList.add("hidden")
   );
 }
@@ -499,9 +513,9 @@ function validateStation(){
 }
 
 document.getElementById("stationsButton").addEventListener("click",showStations);
-document.getElementById("stationAddAction").addEventListener("click",async()=>{closeActionsMenu();if(activeArea!=="stations"){stationMessage("");return;}await showStationForm("add");});
-document.getElementById("stationChangeAction").addEventListener("click",async()=>{closeActionsMenu();if(activeArea!=="stations")return;const id=selectedStationId();if(id===null){stationMessage("Please select a station to change.","error");return;}const row=await getStation(id);if(row)await showStationForm("change",row);});
-document.getElementById("stationDeleteAction").addEventListener("click",async()=>{closeActionsMenu();if(activeArea!=="stations")return;const id=selectedStationId();if(id===null){stationMessage("Please select a station to delete.","error");return;}if(confirm("Are you sure that you want to delete this station?")){await removeStation(id);await renderStations();}});
+document.getElementById("addAction").addEventListener("click",async()=>{closeActionsMenu();if(activeArea==="stations") await showStationForm("add"); else if(activeArea==="purchases") await showPurchaseForm("add");});
+document.getElementById("changeAction").addEventListener("click",async()=>{closeActionsMenu();if(activeArea==="stations"){const id=selectedStationId();if(id===null){stationMessage("Please select a station to change.","error");return;}const row=await getStation(id);if(row)await showStationForm("change",row);} else if(activeArea==="purchases"){const id=selectedPurchaseId();if(id===null){document.getElementById("purchaseListMessage").textContent="Please select a purchase to change.";return;}const row=await getPurchase(id);if(row)await showPurchaseForm("change",row);}});
+document.getElementById("deleteAction").addEventListener("click",async()=>{closeActionsMenu();if(activeArea==="stations"){const id=selectedStationId();if(id===null){stationMessage("Please select a station to delete.","error");return;}if(confirm("Are you sure that you want to delete this station?")){await removeStation(id);await renderStations();}} else if(activeArea==="purchases"){const id=selectedPurchaseId();if(id===null){document.getElementById("purchaseListMessage").textContent="Please select a purchase to delete.";return;}if(confirm("Are you sure that you want to delete this purchase?")){await removePurchase(id);await renderPurchases();}}});
 document.getElementById("stationCancel").addEventListener("click",showStations);
 document.getElementById("stationState").addEventListener("input",e=>e.target.value=e.target.value.toUpperCase().replace(/[^A-Z]/g,"").slice(0,2));
 document.getElementById("stationZip").addEventListener("input",e=>e.target.value=e.target.value.replace(/\D/g,"").slice(0,5));
@@ -510,6 +524,150 @@ document.getElementById("stationForm").addEventListener("submit",async e=>{
   try{const id=await saveStation(rec,editingStationId); editingStationId=null; await showStations(); await renderStations(id);}
   catch(err){stationFormMessage(err&&err.name==="ConstraintError"?"Station Name must be unique.":"The station could not be saved.","error");}
 });
+
+
+// b1v22 Purchases UI and data handling.
+let editingPurchaseId = null;
+
+function getAllPurchases() {
+  return new Promise((resolve,reject)=>{
+    const r=db.transaction("Purchases","readonly").objectStore("Purchases").getAll();
+    r.onsuccess=()=>resolve(r.result); r.onerror=()=>reject(r.error);
+  });
+}
+function getPurchase(id) {
+  return new Promise((resolve,reject)=>{
+    const r=db.transaction("Purchases","readonly").objectStore("Purchases").get(id);
+    r.onsuccess=()=>resolve(r.result); r.onerror=()=>reject(r.error);
+  });
+}
+function savePurchase(record,id=null) {
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction("Purchases","readwrite"), st=tx.objectStore("Purchases");
+    const r=id===null?st.add(record):st.put({...record,PurchaseId:id});
+    r.onsuccess=()=>resolve(r.result); r.onerror=()=>reject(r.error);
+  });
+}
+function removePurchase(id) {
+  return new Promise((resolve,reject)=>{
+    const r=db.transaction("Purchases","readwrite").objectStore("Purchases").delete(id);
+    r.onsuccess=()=>resolve(); r.onerror=()=>reject(r.error);
+  });
+}
+function formatDateDisplay(value) {
+  if (!value) return "";
+  const m=String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m ? `${m[2]}/${m[3]}/${m[1]}` : value;
+}
+function todayMaskedDate() {
+  const d=new Date();
+  return `${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getDate()).padStart(2,"0")}/20${String(d.getFullYear()).slice(-2)}`;
+}
+function maskedDateToISO(v) {
+  if (!/^\d{2}\/\d{2}\/20\d{2}$/.test(v)) return null;
+  const [mm,dd,yyyy]=v.split("/");
+  const y=Number(yyyy), m=Number(mm), d=Number(dd);
+  const dt=new Date(y,m-1,d);
+  if(dt.getFullYear()!==y || dt.getMonth()!==m-1 || dt.getDate()!==d) return null;
+  return `${yyyy}-${mm}-${dd}`;
+}
+function setMaskedDateValue(raw) {
+  const digits=String(raw||"").replace(/\D/g,"").slice(0,8);
+  const fixed="20";
+  let out="";
+  if(digits.length>0) out=digits.slice(0,2);
+  if(digits.length>=3) out+="/"+digits.slice(2,4);
+  if(digits.length>=5) out+="/"+fixed+digits.slice(4,6);
+  else if(digits.length>=3) out+="/20";
+  return out;
+}
+function applyDateMask(input) {
+  let digits=input.value.replace(/\D/g,"");
+  // The first four digits are MMDD; the last two are YY. 20 is never editable.
+  if(digits.length>6) digits=digits.slice(0,6);
+  let out="";
+  if(digits.length) out=digits.slice(0,2);
+  if(digits.length>=3) out+="/"+digits.slice(2,4);
+  if(digits.length>=5) out+="/20"+digits.slice(4,6);
+  else if(digits.length>=3) out+="/20";
+  input.value=out;
+}
+function setupPurchaseDateMask() {
+  const input=document.getElementById("purchaseDate");
+  input.addEventListener("input",()=>applyDateMask(input));
+  input.addEventListener("keydown",e=>{
+    if(e.key==="Backspace" || e.key==="Delete") {
+      e.preventDefault();
+      let digits=input.value.replace(/\D/g,"");
+      if(e.key==="Backspace") digits=digits.slice(0,-1); else digits=digits.slice(0,-1);
+      input.value="";
+      let out="";
+      if(digits.length) out=digits.slice(0,2);
+      if(digits.length>=3) out+="/"+digits.slice(2,4);
+      if(digits.length>=5) out+="/20"+digits.slice(4,6);
+      else if(digits.length>=3) out+="/20";
+      input.value=out;
+      const pos=input.value.length; input.setSelectionRange(pos,pos);
+    }
+  });
+}
+function stationNameMap(rows){return new Map(rows.map(s=>[s.StationId,s.Name]));}
+async function renderPurchases(selected=null) {
+  const [rows,stations]=await Promise.all([getAllPurchases(),getAllStations()]);
+  const sm=stationNameMap(stations);
+  rows.sort((a,b)=>String(b.PurchaseDate).localeCompare(String(a.PurchaseDate)) || b.PurchaseId-a.PurchaseId);
+  const body=document.getElementById("purchaseRows"); body.innerHTML="";
+  for(const row of rows){
+    const tr=document.createElement("tr");
+    const td0=document.createElement("td"); td0.className="radio-column";
+    const radio=document.createElement("input"); radio.type="radio"; radio.name="selectedPurchase"; radio.value=row.PurchaseId;
+    if(selected!==null && Number(selected)===row.PurchaseId) radio.checked=true;
+    td0.appendChild(radio); tr.appendChild(td0);
+    [sm.get(row.Station)||"", formatDateDisplay(row.PurchaseDate), Number(row.Gallons).toFixed(3), Number(row.Price).toFixed(3), Number(row.Cost).toFixed(2)].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.appendChild(td)});
+    body.appendChild(tr);
+  }
+}
+function selectedPurchaseId(){const r=document.querySelector('input[name="selectedPurchase"]:checked');return r?Number(r.value):null;}
+async function loadPurchaseOptions(selectedStation=null,selectedCar=null){
+  const [stations,cars]=await Promise.all([getAllStations(),getBrandCodes()]);
+  const ss=document.getElementById("purchaseStation"), cs=document.getElementById("purchaseCar");
+  ss.innerHTML=""; cs.innerHTML="";
+  let o=document.createElement("option");o.value="";o.textContent="Select station";ss.appendChild(o);
+  stations.sort((a,b)=>a.Name.localeCompare(b.Name)).forEach(x=>{let q=document.createElement("option");q.value=x.StationId;q.textContent=x.Name;if(Number(selectedStation)===x.StationId)q.selected=true;ss.appendChild(q)});
+  o=document.createElement("option");o.value="";o.textContent="Select car";cs.appendChild(o);
+  cars.forEach(x=>{let q=document.createElement("option");q.value=x.SLCId;q.textContent=x.Value;if(Number(selectedCar)===x.SLCId)q.selected=true;cs.appendChild(q)});
+}
+async function showPurchases(){
+  hidePrimaryScreens(); document.getElementById("purchasesScreen").classList.remove("hidden"); activeArea="purchases";
+  document.getElementById("stationsButton").classList.remove("active"); document.getElementById("purchasesButton").classList.add("active");
+  document.getElementById("purchaseListMessage").textContent=""; await renderPurchases();
+}
+async function showPurchaseForm(mode,row=null){
+  hidePrimaryScreens(); document.getElementById("purchaseFormScreen").classList.remove("hidden");
+  document.getElementById("purchaseForm").reset(); editingPurchaseId=mode==="change"&&row?row.PurchaseId:null;
+  document.getElementById("purchaseFormTitle").textContent=mode==="change"?"Change Purchase":"Add Purchase";
+  await loadPurchaseOptions(row?row.Station:null,row?row.Car:null);
+  document.getElementById("purchaseDate").value=row?formatDateDisplay(row.PurchaseDate):todayMaskedDate();
+  if(row){document.getElementById("purchaseGallons").value=Number(row.Gallons).toFixed(3);document.getElementById("purchasePrice").value=Number(row.Price).toFixed(3);document.getElementById("purchaseCost").value=Number(row.Cost).toFixed(2);}
+  document.getElementById("purchaseFormMessage").textContent=""; document.getElementById("purchaseStation").focus();
+}
+function validatePurchase(){
+  const date=maskedDateToISO(document.getElementById("purchaseDate").value);
+  const station=Number(document.getElementById("purchaseStation").value), car=Number(document.getElementById("purchaseCar").value);
+  const gallons=Number(document.getElementById("purchaseGallons").value), price=Number(document.getElementById("purchasePrice").value), cost=Number(document.getElementById("purchaseCost").value);
+  if(!date)return [null,"Purchase Date must be a valid date in mm/dd/20yy format."];
+  if(!Number.isInteger(station)||station<1)return [null,"Station is required."];
+  if(!Number.isInteger(car)||car<1)return [null,"Car is required."];
+  if(!Number.isFinite(gallons)||gallons<=0||gallons>50||!/^\d+(\.\d{1,3})?$/.test(document.getElementById("purchaseGallons").value.trim()))return [null,"Gallons must be positive and 50.000 or less."];
+  if(!Number.isFinite(price)||price<=0||price>10||!/^\d+(\.\d{1,3})?$/.test(document.getElementById("purchasePrice").value.trim()))return [null,"Price must be positive and 10.000 or less."];
+  if(!Number.isFinite(cost)||cost<0||cost>99||!/^\d+(\.\d{1,2})?$/.test(document.getElementById("purchaseCost").value.trim()))return [null,"Cost must be positive and 99.00 or less."];
+  return [{PurchaseDate:date,Station:station,Car:car,Gallons:Number(gallons.toFixed(3)),Price:Number(price.toFixed(3)),Cost:Number(cost.toFixed(2))},""];
+}
+
+document.getElementById("purchasesButton").addEventListener("click",showPurchases);
+document.getElementById("purchaseCancel").addEventListener("click",showPurchases);
+document.getElementById("purchaseForm").addEventListener("submit",async e=>{e.preventDefault();const [rec,error]=validatePurchase();if(error){document.getElementById("purchaseFormMessage").textContent=error;return;}try{const id=await savePurchase(rec,editingPurchaseId);editingPurchaseId=null;await showPurchases();await renderPurchases(id);}catch(err){document.getElementById("purchaseFormMessage").textContent="The purchase could not be saved.";}});
+setupPurchaseDateMask();
 
 openDatabase()
   .then(renderRows)

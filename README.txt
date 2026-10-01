@@ -1,6 +1,6 @@
 GasUsage PWA - Build 1 Version 19
 
-Displayed application version: b1v21
+Displayed application version: b1v22
 ZIP/build version: 19
 
 This build uses IndexedDB.
@@ -50,12 +50,12 @@ b1v18 corrections:
 b1v18: SLCId, Group Code, Order, and Value Code are each 100px wide. Radio and Value columns are unchanged.
 
 
-b1v21 layout changes:
+b1v22 layout changes:
 - The Close button is now below the Saved System Lookup Codes list, left-justified with a 20px left margin and 20px top margin.
 - Save/Clear moved upward 15px; all content below those buttons moves upward with them.
 - The four SLC list columns remain 50px wide; radio and Value columns are unchanged.
 
-b1v21 Stations table
+b1v22 Stations table
 --------------------
 IndexedDB object store: Stations
 - StationId: primary key, unique whole number, auto-generated starting at 1
