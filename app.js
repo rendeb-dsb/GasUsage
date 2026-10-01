@@ -2,8 +2,17 @@ const DB_NAME = "GasUsageDB";
 const DB_VERSION = 5;
 const STORE_NAME = "SystemLookupCodes";
 
-let db;
+let db = null;
+let dbPromise = null;
 let editingId = null;
+
+async function getDatabase() {
+  if (db) return db;
+  if (!dbPromise) {
+    dbPromise = openDatabase().catch(err => { dbPromise = null; db = null; throw err; });
+  }
+  return dbPromise;
+}
 
 function openDatabase() {
   return new Promise((resolve, reject) => {
@@ -52,7 +61,8 @@ function openDatabase() {
 
     request.onsuccess = () => {
       db = request.result;
-      db.onversionchange = () => {};
+      db.onversionchange = () => { try { db.close(); } catch (_) {} db = null; dbPromise = null; };
+      db.onclose = () => { db = null; dbPromise = null; };
       resolve(db);
     };
     request.onblocked = () => reject(new Error("The existing Gas Usage database is busy."));
@@ -85,56 +95,47 @@ function validate(groupCode, order, valueCode, value) {
   return "";
 }
 
-function saveRecord(record, id = null) {
+async function saveRecord(record, id = null) {
+  const database = await getDatabase();
   return new Promise((resolve, reject) => {
     let settled = false;
-    let request;
     try {
-      const tx = db.transaction(STORE_NAME, "readwrite");
+      const tx = database.transaction(STORE_NAME, "readwrite");
       const store = tx.objectStore(STORE_NAME);
       const data = id === null ? record : { ...record, SLCId: id };
-      request = id === null ? store.add(data) : store.put(data);
-
-      request.onerror = () => {
-        if (!settled) { settled = true; reject(request.error || new Error("IndexedDB save request failed.")); }
-      };
-      tx.onerror = () => {
-        if (!settled) { settled = true; reject(tx.error || new Error("IndexedDB save transaction failed.")); }
-      };
-      tx.onabort = () => {
-        if (!settled) { settled = true; reject(tx.error || new Error("IndexedDB save transaction was aborted.")); }
-      };
-      tx.oncomplete = () => {
-        if (!settled) { settled = true; resolve(request.result); }
-      };
-    } catch (err) {
-      reject(err);
-    }
+      const request = id === null ? store.add(data) : store.put(data);
+      request.onerror = () => { if (!settled) { settled = true; reject(request.error || new Error("IndexedDB save request failed.")); } };
+      tx.onerror = () => { if (!settled) { settled = true; reject(tx.error || new Error("IndexedDB save transaction failed.")); } };
+      tx.onabort = () => { if (!settled) { settled = true; reject(tx.error || new Error("IndexedDB save transaction was aborted.")); } };
+      tx.oncomplete = () => { if (!settled) { settled = true; resolve(request.result); } };
+    } catch (err) { reject(err); }
   });
 }
 
-function deleteRecord(id) {
+async function deleteRecord(id) {
+  const database = await getDatabase();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readwrite");
+    const tx = database.transaction(STORE_NAME, "readwrite");
     const request = tx.objectStore(STORE_NAME).delete(id);
-    request.onsuccess = () => resolve();
     request.onerror = () => reject(request.error);
+    tx.onerror = () => reject(tx.error || new Error("IndexedDB delete transaction failed."));
+    tx.oncomplete = () => resolve();
   });
 }
 
-function getRecord(id) {
+async function getRecord(id) {
+  const database = await getDatabase();
   return new Promise((resolve, reject) => {
-    const request = db.transaction(STORE_NAME, "readonly")
-      .objectStore(STORE_NAME).get(id);
+    const request = database.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).get(id);
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
 }
 
-function getAllRecords() {
+async function getAllRecords() {
+  const database = await getDatabase();
   return new Promise((resolve, reject) => {
-    const request = db.transaction(STORE_NAME, "readonly")
-      .objectStore(STORE_NAME).getAll();
+    const request = database.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).getAll();
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
@@ -470,7 +471,8 @@ jsonFileInput.addEventListener("change", async () => {
     const confirmed = window.confirm("Import this Gas Usage database and replace all current data in all three tables?");
     if (!confirmed) return;
 
-    const tx = db.transaction(["SystemLookupCodes", "Stations", "Purchases"], "readwrite");
+    const database = await getDatabase();
+    const tx = database.transaction(["SystemLookupCodes", "Stations", "Purchases"], "readwrite");
     const slcStore = tx.objectStore("SystemLookupCodes");
     const stationStore = tx.objectStore("Stations");
     const purchaseStore = tx.objectStore("Purchases");
@@ -525,28 +527,32 @@ function stationFormMessage(text, type="") {
   el.textContent=text; el.className="message "+type;
 }
 
-function getAllStations() {
+async function getAllStations() {
+  const database = await getDatabase();
   return new Promise((resolve,reject)=>{
-    const r=db.transaction("Stations","readonly").objectStore("Stations").getAll();
+    const r=database.transaction("Stations","readonly").objectStore("Stations").getAll();
     r.onsuccess=()=>resolve(r.result); r.onerror=()=>reject(r.error);
   });
 }
-function getStation(id) {
+async function getStation(id) {
+  const database = await getDatabase();
   return new Promise((resolve,reject)=>{
-    const r=db.transaction("Stations","readonly").objectStore("Stations").get(id);
+    const r=database.transaction("Stations","readonly").objectStore("Stations").get(id);
     r.onsuccess=()=>resolve(r.result); r.onerror=()=>reject(r.error);
   });
 }
-function saveStation(record,id=null) {
+async function saveStation(record,id=null) {
+  const database = await getDatabase();
   return new Promise((resolve,reject)=>{
-    const tx=db.transaction("Stations","readwrite"), st=tx.objectStore("Stations");
+    const tx=database.transaction("Stations","readwrite"), st=tx.objectStore("Stations");
     const r=id===null?st.add(record):st.put({...record,StationId:id});
     r.onsuccess=()=>resolve(r.result); r.onerror=()=>reject(r.error);
   });
 }
-function removeStation(id) {
+async function removeStation(id) {
+  const database = await getDatabase();
   return new Promise((resolve,reject)=>{
-    const r=db.transaction("Stations","readwrite").objectStore("Stations").delete(id);
+    const r=database.transaction("Stations","readwrite").objectStore("Stations").delete(id);
     r.onsuccess=()=>resolve(); r.onerror=()=>reject(r.error);
   });
 }
@@ -629,28 +635,32 @@ document.getElementById("stationForm").addEventListener("submit",async e=>{
 // b1v22 Purchases UI and data handling.
 let editingPurchaseId = null;
 
-function getAllPurchases() {
+async function getAllPurchases() {
+  const database = await getDatabase();
   return new Promise((resolve,reject)=>{
-    const r=db.transaction("Purchases","readonly").objectStore("Purchases").getAll();
+    const r=database.transaction("Purchases","readonly").objectStore("Purchases").getAll();
     r.onsuccess=()=>resolve(r.result); r.onerror=()=>reject(r.error);
   });
 }
-function getPurchase(id) {
+async function getPurchase(id) {
+  const database = await getDatabase();
   return new Promise((resolve,reject)=>{
-    const r=db.transaction("Purchases","readonly").objectStore("Purchases").get(id);
+    const r=database.transaction("Purchases","readonly").objectStore("Purchases").get(id);
     r.onsuccess=()=>resolve(r.result); r.onerror=()=>reject(r.error);
   });
 }
-function savePurchase(record,id=null) {
+async function savePurchase(record,id=null) {
+  const database = await getDatabase();
   return new Promise((resolve,reject)=>{
-    const tx=db.transaction("Purchases","readwrite"), st=tx.objectStore("Purchases");
+    const tx=database.transaction("Purchases","readwrite"), st=tx.objectStore("Purchases");
     const r=id===null?st.add(record):st.put({...record,PurchaseId:id});
     r.onsuccess=()=>resolve(r.result); r.onerror=()=>reject(r.error);
   });
 }
-function removePurchase(id) {
+async function removePurchase(id) {
+  const database = await getDatabase();
   return new Promise((resolve,reject)=>{
-    const r=db.transaction("Purchases","readwrite").objectStore("Purchases").delete(id);
+    const r=database.transaction("Purchases","readwrite").objectStore("Purchases").delete(id);
     r.onsuccess=()=>resolve(); r.onerror=()=>reject(r.error);
   });
 }
@@ -934,7 +944,7 @@ document.getElementById("purchaseForm").addEventListener("submit",async e=>{
 setupPurchaseDateMask();
 setupPurchaseCostCalculation();
 
-openDatabase()
+getDatabase()
   .then(async database => {
     const required = ["SystemLookupCodes", "Stations", "Purchases"];
     const missing = required.filter(name => !database.objectStoreNames.contains(name));
