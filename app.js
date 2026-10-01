@@ -608,7 +608,7 @@ function selectedStationId(){const r=document.querySelector('input[name="selecte
 
 async function showStations(){
   hidePrimaryScreens(); document.getElementById("stationsScreen").classList.remove("hidden");
-  activeArea="stations"; document.getElementById("stationsButton").classList.add("active");
+  activeArea="stations"; document.getElementById("stationsButton").classList.add("active"); document.getElementById("purchasesButton").classList.remove("active");
   stationMessage(""); await renderStations();
 }
 async function loadBrandOptions(selected=null){
