@@ -809,8 +809,9 @@ function setupPurchaseDateMask() {
 
 function stationNameMap(rows){return new Map(rows.map(s=>[s.StationId,s.Name]));}
 async function renderPurchases(selected=null) {
-  const [rows,stations]=await Promise.all([getAllPurchases(),getAllStations()]);
+  const [rows,stations,cars]=await Promise.all([getAllPurchases(),getAllStations(),getCarCodes()]);
   const sm=stationNameMap(stations);
+  const cm=new Map(cars.map(c=>[c.SLCId,c.Value]));
   rows.sort((a,b)=>String(b.PurchaseDate).localeCompare(String(a.PurchaseDate)) || b.PurchaseId-a.PurchaseId);
   const body=document.getElementById("purchaseRows"); body.innerHTML="";
   for(const row of rows){
@@ -819,7 +820,7 @@ async function renderPurchases(selected=null) {
     const radio=document.createElement("input"); radio.type="radio"; radio.name="selectedPurchase"; radio.value=row.PurchaseId;
     if(selected!==null && Number(selected)===row.PurchaseId) radio.checked=true;
     td0.appendChild(radio); tr.appendChild(td0);
-    [sm.get(row.Station)||"", formatDateDisplay(row.PurchaseDate), Number(row.Gallons).toFixed(3), Number(row.Price).toFixed(3), Number(row.Cost).toFixed(2)].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.appendChild(td)});
+    [sm.get(row.Station)||"", cm.get(row.Car)||"", formatDateDisplay(row.PurchaseDate), Number(row.Gallons).toFixed(3), Number(row.Price).toFixed(3), Number(row.Cost).toFixed(2)].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.appendChild(td)});
     body.appendChild(tr);
   }
 }
