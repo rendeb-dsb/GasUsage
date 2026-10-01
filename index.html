@@ -7,11 +7,11 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="theme-color" content="#ffffff">
-<title>Gas Usage b1v33</title>
+<title>Gas Usage b1v34</title>
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="styles.css?v=b1v33">
-<style id="b1v33-layout-fix">
-/* b1v33 layout corrections */
+<link rel="stylesheet" href="styles.css?v=b1v34">
+<style id="b1v34-layout-fix">
+/* b1v34 layout corrections */
 .entry-grid { grid-template-columns: 105px 40px 86px minmax(80px, 1fr) !important; }
 .short-input {
   width: 40px !important;
@@ -43,8 +43,8 @@
 }
 </style>
 
-<style id="b1v33-entry-layout">
-/* b1v33: exact entry alignment requested by the user.
+<style id="b1v34-entry-layout">
+/* b1v34: exact entry alignment requested by the user.
    Content starts at the existing 12px main padding.
    Column starts are: label 24px, short boxes 124px, second label 311px,
    second set of boxes 400px on the phone layout. */
@@ -97,8 +97,8 @@
 </style>
 
 
-<style id="b1v33-entry-layout">
-/* b1v33: each input is exactly 10px from its own label. */
+<style id="b1v34-entry-layout">
+/* b1v34: each input is exactly 10px from its own label. */
 .entry-grid {
   display: flex !important;
   flex-direction: column !important;
@@ -143,7 +143,7 @@
 <div class="app">
   <header class="topbar opening-header">
     <div class="title-line">
-      <span class="version">b1v33</span>
+      <span class="version">b1v34</span>
       <span class="app-title">Gas Usage</span>
       <button id="gearButton" class="gear-button" aria-label="System Lookup Codes">⚙</button>
     </div>
@@ -285,6 +285,16 @@
 
   <input id="jsonFileInput" type="file" accept=".json,application/json" class="hidden">
 
+  <div id="operationModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="operationModalTitle">
+    <div class="modal-box">
+      <div id="operationModalTitle" class="modal-title">Gas Usage</div>
+      <div id="operationModalMessage" class="modal-text"></div>
+      <div class="modal-buttons">
+        <button type="button" id="operationModalOk" class="action-button">OK</button>
+      </div>
+    </div>
+  </div>
+
   <div id="deleteModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="deletePrompt">
     <div class="modal-box">
       <div id="deletePrompt" class="modal-text">Are you sure that you want to delete this record?</div>
@@ -295,7 +305,7 @@
     </div>
   </div>
 </div>
-<script src="app.js?v=b1v33"></script>
+<script src="app.js?v=b1v34"></script>
   <div id="gasPurchaseModal" class="gas-purchase-modal hidden" role="dialog" aria-modal="true" aria-labelledby="gasPurchaseModalTitle">
     <div class="gas-purchase-dialog">
       <h3 id="gasPurchaseModalTitle">Gas Purchase</h3>

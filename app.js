@@ -76,6 +76,20 @@ function showMessage(text, type = "") {
   el.className = "message " + type;
 }
 
+const operationModal = document.getElementById("operationModal");
+const operationModalMessage = document.getElementById("operationModalMessage");
+const operationModalOk = document.getElementById("operationModalOk");
+
+function showOperationModal(text) {
+  operationModalMessage.textContent = text;
+  operationModal.classList.remove("hidden");
+  operationModalOk.focus();
+}
+
+operationModalOk.addEventListener("click", () => {
+  operationModal.classList.add("hidden");
+});
+
 function clearEntryFields(focusGroup = false) {
   document.getElementById("slcForm").reset();
   editingId = null;
@@ -375,6 +389,7 @@ exportButton.addEventListener("click", async () => {
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
+    showOperationModal("The Gas Usage database was exported successfully.");
   } catch {
     showMessage("The Gas Usage database could not be exported.", "error");
   }
@@ -503,7 +518,8 @@ jsonFileInput.addEventListener("change", async () => {
     await renderRows();
     if (activeArea === "stations") await renderStations();
     if (activeArea === "purchases") await renderPurchases();
-    showMessage("Gas Usage database imported.", "ok");
+    showMessage("");
+    showOperationModal("The Gas Usage database was imported successfully.");
   } catch (err) {
     showMessage("The Gas Usage database could not be imported: " + err.message, "error");
   } finally {
