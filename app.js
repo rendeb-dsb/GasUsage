@@ -20,7 +20,7 @@ function openDatabase() {
         store.createIndex("GroupCode_Order", ["GroupCode", "Order"], { unique: true });
       }
 
-      // b1v20: add the Stations table without changing existing SLC data.
+      // b1v21: add the Stations table without changing existing SLC data.
       if (!database.objectStoreNames.contains("Stations")) {
         const stations = database.createObjectStore("Stations", {
           keyPath: "StationId",
@@ -256,13 +256,16 @@ document.querySelectorAll("#groupCode, #valueCode").forEach(input => {
 
 document.getElementById("gearButton").addEventListener("click", () => {
   document.getElementById("mainScreen").classList.add("hidden");
+  document.getElementById("stationsScreen").classList.add("hidden");
+  document.getElementById("stationFormScreen").classList.add("hidden");
   document.getElementById("gearScreen").classList.remove("hidden");
   document.getElementById("groupCode").focus();
 });
 
 document.getElementById("closeGear").addEventListener("click", () => {
   document.getElementById("gearScreen").classList.add("hidden");
-  document.getElementById("mainScreen").classList.remove("hidden");
+  if (activeArea === "stations") document.getElementById("stationsScreen").classList.remove("hidden");
+  else document.getElementById("mainScreen").classList.remove("hidden");
 });
 
 const actionsButton = document.getElementById("actionsButton");
@@ -383,6 +386,129 @@ jsonFileInput.addEventListener("change", async () => {
   } finally {
     jsonFileInput.value = "";
   }
+});
+
+
+
+// b1v21 Stations UI and data handling.
+let activeArea = "main";
+let editingStationId = null;
+
+function hidePrimaryScreens() {
+  ["mainScreen", "stationsScreen", "stationFormScreen", "gearScreen"].forEach(id =>
+    document.getElementById(id).classList.add("hidden")
+  );
+}
+
+function closeActionsMenu() {
+  actionsMenu.classList.add("hidden");
+  actionsButton.setAttribute("aria-expanded", "false");
+}
+
+function stationMessage(text, type="") {
+  const el=document.getElementById("stationListMessage");
+  el.textContent=text; el.className="message "+type;
+}
+function stationFormMessage(text, type="") {
+  const el=document.getElementById("stationFormMessage");
+  el.textContent=text; el.className="message "+type;
+}
+
+function getAllStations() {
+  return new Promise((resolve,reject)=>{
+    const r=db.transaction("Stations","readonly").objectStore("Stations").getAll();
+    r.onsuccess=()=>resolve(r.result); r.onerror=()=>reject(r.error);
+  });
+}
+function getStation(id) {
+  return new Promise((resolve,reject)=>{
+    const r=db.transaction("Stations","readonly").objectStore("Stations").get(id);
+    r.onsuccess=()=>resolve(r.result); r.onerror=()=>reject(r.error);
+  });
+}
+function saveStation(record,id=null) {
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction("Stations","readwrite"), st=tx.objectStore("Stations");
+    const r=id===null?st.add(record):st.put({...record,StationId:id});
+    r.onsuccess=()=>resolve(r.result); r.onerror=()=>reject(r.error);
+  });
+}
+function removeStation(id) {
+  return new Promise((resolve,reject)=>{
+    const r=db.transaction("Stations","readwrite").objectStore("Stations").delete(id);
+    r.onsuccess=()=>resolve(); r.onerror=()=>reject(r.error);
+  });
+}
+function getBrandCodes() {
+  return getAllRecords().then(rows=>rows.filter(r=>r.GroupCode==="BR").sort((a,b)=>a.Order-b.Order));
+}
+
+async function renderStations(selected=null) {
+  const [rows,brands]=await Promise.all([getAllStations(),getBrandCodes()]);
+  const brandMap=new Map(brands.map(b=>[b.SLCId,b.Value]));
+  rows.sort((a,b)=>a.Name.localeCompare(b.Name));
+  const body=document.getElementById("stationRows"); body.innerHTML="";
+  for(const row of rows){
+    const tr=document.createElement("tr");
+    const td0=document.createElement("td"); td0.className="radio-column";
+    const radio=document.createElement("input"); radio.type="radio"; radio.name="selectedStation"; radio.value=row.StationId;
+    if(selected===row.StationId) radio.checked=true; td0.appendChild(radio); tr.appendChild(td0);
+    const address=row.Address2?`${row.Address1}, ${row.Address2}`:row.Address1;
+    [row.Name,brandMap.get(row.Brand)||"",address,row.City,row.State,row.Zip].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.appendChild(td)});
+    body.appendChild(tr);
+  }
+}
+function selectedStationId(){const r=document.querySelector('input[name="selectedStation"]:checked');return r?Number(r.value):null;}
+
+async function showStations(){
+  hidePrimaryScreens(); document.getElementById("stationsScreen").classList.remove("hidden");
+  activeArea="stations"; document.getElementById("stationsButton").classList.add("active");
+  stationMessage(""); await renderStations();
+}
+async function loadBrandOptions(selected=null){
+  const select=document.getElementById("stationBrand"), brands=await getBrandCodes(); select.innerHTML="";
+  const blank=document.createElement("option"); blank.value=""; blank.textContent="Select brand"; select.appendChild(blank);
+  brands.forEach(b=>{const o=document.createElement("option");o.value=b.SLCId;o.textContent=b.Value;if(selected===b.SLCId)o.selected=true;select.appendChild(o)});
+}
+async function showStationForm(mode,row=null){
+  hidePrimaryScreens(); document.getElementById("stationFormScreen").classList.remove("hidden");
+  document.getElementById("stationForm").reset(); document.getElementById("stationState").value="FL"; stationFormMessage("");
+  editingStationId=mode==="change"&&row?row.StationId:null;
+  document.getElementById("stationFormTitle").textContent=mode==="change"?"Change Station":"Add Station";
+  await loadBrandOptions(row?row.Brand:null);
+  if(row){
+    document.getElementById("stationName").value=row.Name; document.getElementById("stationAddress1").value=row.Address1;
+    document.getElementById("stationAddress2").value=row.Address2||""; document.getElementById("stationCity").value=row.City;
+    document.getElementById("stationState").value=row.State; document.getElementById("stationZip").value=row.Zip;
+  }
+  document.getElementById("stationName").focus();
+}
+
+function validateStation(){
+  const rec={
+    Name:document.getElementById("stationName").value.trim(), Brand:Number(document.getElementById("stationBrand").value),
+    Address1:document.getElementById("stationAddress1").value.trim(), Address2:document.getElementById("stationAddress2").value.trim(),
+    City:document.getElementById("stationCity").value.trim(), State:document.getElementById("stationState").value.trim().toUpperCase(),
+    Zip:document.getElementById("stationZip").value.trim()
+  };
+  if(!rec.Name)return [null,"Name is required."]; if(!Number.isInteger(rec.Brand)||rec.Brand<1)return [null,"Brand is required."];
+  if(!rec.Address1)return [null,"Address1 is required."]; if(!rec.City)return [null,"City is required."];
+  if(!/^[A-Z]{2}$/.test(rec.State))return [null,"State must be exactly 2 uppercase letters."];
+  if(!/^\d{5}$/.test(rec.Zip))return [null,"Zip must be exactly 5 digits."];
+  return [rec,""];
+}
+
+document.getElementById("stationsButton").addEventListener("click",showStations);
+document.getElementById("stationAddAction").addEventListener("click",async()=>{closeActionsMenu();if(activeArea!=="stations"){stationMessage("");return;}await showStationForm("add");});
+document.getElementById("stationChangeAction").addEventListener("click",async()=>{closeActionsMenu();if(activeArea!=="stations")return;const id=selectedStationId();if(id===null){stationMessage("Please select a station to change.","error");return;}const row=await getStation(id);if(row)await showStationForm("change",row);});
+document.getElementById("stationDeleteAction").addEventListener("click",async()=>{closeActionsMenu();if(activeArea!=="stations")return;const id=selectedStationId();if(id===null){stationMessage("Please select a station to delete.","error");return;}if(confirm("Are you sure that you want to delete this station?")){await removeStation(id);await renderStations();}});
+document.getElementById("stationCancel").addEventListener("click",showStations);
+document.getElementById("stationState").addEventListener("input",e=>e.target.value=e.target.value.toUpperCase().replace(/[^A-Z]/g,"").slice(0,2));
+document.getElementById("stationZip").addEventListener("input",e=>e.target.value=e.target.value.replace(/\D/g,"").slice(0,5));
+document.getElementById("stationForm").addEventListener("submit",async e=>{
+  e.preventDefault(); const [rec,error]=validateStation(); if(error){stationFormMessage(error,"error");return;}
+  try{const id=await saveStation(rec,editingStationId); editingStationId=null; await showStations(); await renderStations(id);}
+  catch(err){stationFormMessage(err&&err.name==="ConstraintError"?"Station Name must be unique.":"The station could not be saved.","error");}
 });
 
 openDatabase()
