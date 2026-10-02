@@ -952,18 +952,6 @@ function calculatePurchaseCostIfReady() {
   return true;
 }
 
-window.gasUsageRecalcCost = function() {
-  const gallonsInput = document.getElementById("purchaseGallons");
-  const priceInput = document.getElementById("purchasePrice");
-  const costInput = document.getElementById("purchaseCost");
-  if (!gallonsInput || !priceInput || !costInput) return;
-  const gallons = Number(gallonsInput.value);
-  const price = Number(priceInput.value);
-  if (Number.isFinite(gallons) && gallons > 0 && gallons <= 50 && Number.isFinite(price) && price > 0 && price <= 10) {
-    setCalculatedCost(gallons * price);
-  }
-};
-
 function setupPurchaseCostCalculation() {
   const gallonsInput = document.getElementById("purchaseGallons");
   const priceInput = document.getElementById("purchasePrice");
@@ -977,13 +965,24 @@ function setupPurchaseCostCalculation() {
     input.addEventListener("blur", recalculate);
   });
 
-  costInput.addEventListener("focus", () => {
-    if (purchaseCostCalculated) costInput.select();
+  // A calculated Cost is green until the user actually edits it.
+  // Handle keyboard, paste, cut, autofill and change paths so the manual value
+  // is always black once the user changes the field.
+  const markManual = () => {
+    if (purchaseCostCalculated) clearCalculatedCostState();
+  };
+  costInput.addEventListener("keydown", e => {
+    if (["Backspace","Delete"].includes(e.key) || e.key.length === 1 || e.ctrlKey || e.metaKey) markManual();
   });
-  costInput.addEventListener("input", () => {
-    clearCalculatedCostState();
+  costInput.addEventListener("beforeinput", e => {
+    if (e.inputType && e.inputType !== "insertCompositionText") markManual();
   });
+  costInput.addEventListener("paste", markManual);
+  costInput.addEventListener("cut", markManual);
+  costInput.addEventListener("input", markManual);
+  costInput.addEventListener("change", markManual);
 }
+
 
 async function showPurchaseForm(mode,row=null){
   hidePrimaryScreens(); document.getElementById("purchaseFormScreen").classList.remove("hidden");
@@ -1035,9 +1034,7 @@ async function isDuplicatePurchase(stationId, purchaseDate, gallons, excludeId =
 
 function validatePurchase(){
   const costInput = document.getElementById("purchaseCost");
-  if (purchaseCostCalculated || !costInput.value.trim()) {
-    window.gasUsageRecalcCost();
-  }
+  if (!costInput.value.trim() || purchaseCostCalculated) calculatePurchaseCostIfReady();
   const date=maskedDateToISO(document.getElementById("purchaseDate").value);
   const station=Number(document.getElementById("purchaseStation").value), car=Number(document.getElementById("purchaseCar").value);
   const gallons=Number(document.getElementById("purchaseGallons").value), price=Number(document.getElementById("purchasePrice").value), cost=Number(document.getElementById("purchaseCost").value);
@@ -1058,6 +1055,11 @@ document.getElementById("gasPurchaseModalOk").addEventListener("click",hideGasPu
 document.getElementById("gasPurchaseModal").addEventListener("click",e=>{if(e.target.id==="gasPurchaseModal")hideGasPurchaseMessage();});
 document.getElementById("purchaseForm").addEventListener("submit",async e=>{
   e.preventDefault();
+  // Recalculate immediately before validation/save so the value being stored
+  // is always the value actually shown in Cost.
+  if (!document.getElementById("purchaseCost").value.trim() || purchaseCostCalculated) {
+    calculatePurchaseCostIfReady();
+  }
   const [rec,error]=validatePurchase();
   if(error){document.getElementById("purchaseFormMessage").textContent=error;return;}
   try{
@@ -1066,8 +1068,14 @@ document.getElementById("purchaseForm").addEventListener("submit",async e=>{
       return;
     }
     const id=await savePurchase(rec,editingPurchaseId);
-    editingPurchaseId=null;await showPurchases();await renderPurchases(id);
-  }catch(err){showGasPurchaseMessage("The purchase could not be saved.");}
+    // Do not leave the form until the IndexedDB transaction has completed.
+    editingPurchaseId=null;
+    await showPurchases();
+    await renderPurchases(id);
+  }catch(err){
+    const detail = err && err.message ? err.message : "IndexedDB purchase save failed.";
+    showGasPurchaseMessage("The purchase could not be saved. " + detail);
+  }
 });
 setupPurchaseDateMask();
 setupPurchaseCostCalculation();
