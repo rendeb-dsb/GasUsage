@@ -678,9 +678,18 @@ async function getPurchase(id) {
 async function savePurchase(record,id=null) {
   const database = await getDatabase();
   return new Promise((resolve,reject)=>{
-    const tx=database.transaction("Purchases","readwrite"), st=tx.objectStore("Purchases");
-    const r=id===null?st.add(record):st.put({...record,PurchaseId:id});
-    r.onsuccess=()=>resolve(r.result); r.onerror=()=>reject(r.error);
+    let requestResult;
+    let settled = false;
+    try {
+      const tx=database.transaction("Purchases","readwrite");
+      const st=tx.objectStore("Purchases");
+      const r=id===null?st.add(record):st.put({...record,PurchaseId:id});
+      r.onsuccess=()=>{ requestResult=r.result; };
+      r.onerror=()=>{ if(!settled){ settled=true; reject(r.error || new Error("IndexedDB purchase save failed.")); } };
+      tx.onerror=()=>{ if(!settled){ settled=true; reject(tx.error || new Error("IndexedDB purchase transaction failed.")); } };
+      tx.onabort=()=>{ if(!settled){ settled=true; reject(tx.error || new Error("IndexedDB purchase transaction was aborted.")); } };
+      tx.oncomplete=()=>{ if(!settled){ settled=true; resolve(requestResult); } };
+    } catch(err) { reject(err); }
   });
 }
 async function removePurchase(id) {

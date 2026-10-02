@@ -1,22 +1,10 @@
-Gas Usage PWA
-Displayed application version: b1v39
+Gas Usage PWA - b1v40
 
-b1v39 changes:
-- Added a "Show Car:" drop-down to the Purchases screen.
-  - First entry is All with hidden value -1 and is the default.
-  - Remaining entries come from SystemLookupCodes where GroupCode = CR.
-  - Hidden value is SLCId.
-- Added a "Stations:" drop-down to the right of Show Car.
-  - First entry is All with hidden value -1 and is the default.
-  - Remaining entries come from SystemLookupCodes where GroupCode = BR.
-  - Hidden value is SLCId.
-  - Entries are sorted by the SystemLookupCodes Order field.
-- The two filters update the Purchases list when changed.
-- The Stations filter uses the selected BR SLCId to show purchases made at Stations having that Brand.
-- Existing database remains GasUsageDB and is not cleared by this change.
+Displayed application version: b1v40
 
-
-b1v39 changes:
-- Moved the Stations filter to the same line as the Purchases title and right-justified it.
-- Moved the Show Car filter to the line below and right-justified it.
-- Existing filter data sources and filtering logic are unchanged.
+b1v40 changes:
+- Retained the Purchase Cost calculation: Gallons x Price, displayed in green as 99.99 when calculated.
+- If the user edits Cost, the displayed value becomes black and the user's value is saved.
+- Purchase Save now waits for the IndexedDB transaction to complete before returning success, preventing the Purchase list from rendering before the new record is committed.
+- Changed the Purchase filter label from "Stations:" to "Show Stations:".
+- Database remains GasUsageDB and existing data is preserved.
