@@ -7,11 +7,11 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="theme-color" content="#ffffff">
-<title>Gas Usage b1v45</title>
+<title>Gas Usage b1v46</title>
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="styles.css?v=b1v45">
-<style id="b1v45-layout-fix">
-/* b1v45 layout corrections */
+<link rel="stylesheet" href="styles-b1v46.css">
+<style id="b1v46-layout-fix">
+/* b1v46 layout corrections */
 .entry-grid { grid-template-columns: 105px 40px 86px minmax(80px, 1fr) !important; }
 .short-input {
   width: 40px !important;
@@ -43,8 +43,8 @@
 }
 </style>
 
-<style id="b1v45-entry-layout">
-/* b1v45: exact entry alignment requested by the user.
+<style id="b1v46-entry-layout">
+/* b1v46: exact entry alignment requested by the user.
    Content starts at the existing 12px main padding.
    Column starts are: label 24px, short boxes 124px, second label 311px,
    second set of boxes 400px on the phone layout. */
@@ -97,8 +97,8 @@
 </style>
 
 
-<style id="b1v45-entry-layout">
-/* b1v45: each input is exactly 10px from its own label. */
+<style id="b1v46-entry-layout">
+/* b1v46: each input is exactly 10px from its own label. */
 .entry-grid {
   display: flex !important;
   flex-direction: column !important;
@@ -143,7 +143,7 @@
 <div class="app">
   <header class="topbar opening-header">
     <div class="title-line">
-      <span class="version">b1v45</span>
+      <span class="version">b1v46</span>
       <span class="app-title">Gas Usage</span>
       <button id="gearButton" class="gear-button" aria-label="System Lookup Codes">⚙</button>
     </div>
@@ -208,8 +208,8 @@
           <label for="purchaseDate">Purchase Date:</label><input id="purchaseDate" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="mm/dd/20yy" required>
           <label for="purchaseStation">Station:</label><select id="purchaseStation" required></select>
           <label for="purchaseCar">Car:</label><select id="purchaseCar" required></select>
-          <label for="purchaseGallons">Gallons:</label><input id="purchaseGallons" type="number" min="0.001" max="50" step="0.001" inputmode="decimal" required>
-          <label for="purchasePrice">Price:</label><input id="purchasePrice" type="number" min="0.001" max="10" step="0.001" inputmode="decimal" required>
+          <label for="purchaseGallons">Gallons:</label><input id="purchaseGallons" type="number" min="0.001" max="50" step="0.001" inputmode="decimal" required oninput="window.gasUsageCalculatePurchaseCost && window.gasUsageCalculatePurchaseCost()" onchange="window.gasUsageCalculatePurchaseCost && window.gasUsageCalculatePurchaseCost()">
+          <label for="purchasePrice">Price:</label><input id="purchasePrice" type="number" min="0.001" max="10" step="0.001" inputmode="decimal" required oninput="window.gasUsageCalculatePurchaseCost && window.gasUsageCalculatePurchaseCost()" onchange="window.gasUsageCalculatePurchaseCost && window.gasUsageCalculatePurchaseCost()">
           <label for="purchaseCost">Cost:</label><input id="purchaseCost" type="number" min="0.01" max="99" step="0.01" inputmode="decimal" required>
         </div>
         <div id="purchaseFormMessage" class="message" aria-live="polite"></div>
@@ -315,7 +315,7 @@
     </div>
   </div>
 </div>
-<script src="app.js?v=b1v45"></script>
+<script src="app-b1v46.js"></script>
   <div id="gasPurchaseModal" class="gas-purchase-modal hidden" role="dialog" aria-modal="true" aria-labelledby="gasPurchaseModalTitle">
     <div class="gas-purchase-dialog">
       <h3 id="gasPurchaseModalTitle">Gas Purchase</h3>
