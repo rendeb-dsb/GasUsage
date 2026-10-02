@@ -1,10 +1,12 @@
-Gas Usage PWA - b1v40
+Gas Usage PWA - b1v41
 
-Displayed application version: b1v40
+Displayed application version: b1v41
 
-b1v40 changes:
-- Retained the Purchase Cost calculation: Gallons x Price, displayed in green as 99.99 when calculated.
-- If the user edits Cost, the displayed value becomes black and the user's value is saved.
-- Purchase Save now waits for the IndexedDB transaction to complete before returning success, preventing the Purchase list from rendering before the new record is committed.
-- Changed the Purchase filter label from "Stations:" to "Show Stations:".
-- Database remains GasUsageDB and existing data is preserved.
+b1v41 changes:
+- Restored and hardened automatic Purchase Cost calculation.
+- Gallons x Price is calculated as soon as valid values are present.
+- Calculated Cost is green and formatted as 99.99.
+- User-entered Cost becomes black and is preserved for saving.
+- Save recalculates an automatic Cost before validation when appropriate.
+- Purchase save waits for the IndexedDB transaction to complete before refreshing the list.
+- Existing database name and data model are preserved.
