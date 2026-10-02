@@ -958,29 +958,23 @@ function setupPurchaseCostCalculation() {
   const costInput = document.getElementById("purchaseCost");
   if (!gallonsInput || !priceInput || !costInput) return;
 
-  const recalculate = () => { calculatePurchaseCostIfReady(); };
+  const recalculate = () => {
+    if (document.activeElement === costInput && purchaseCostCalculated) return;
+    calculatePurchaseCostIfReady();
+  };
   [gallonsInput, priceInput].forEach(input => {
     input.addEventListener("input", recalculate);
     input.addEventListener("change", recalculate);
-    input.addEventListener("blur", recalculate);
+    input.addEventListener("keyup", recalculate);
   });
 
-  // A calculated Cost is green until the user actually edits it.
-  // Handle keyboard, paste, cut, autofill and change paths so the manual value
-  // is always black once the user changes the field.
+  // Any real user edit of Cost changes a calculated value to a manual value.
   const markManual = () => {
     if (purchaseCostCalculated) clearCalculatedCostState();
   };
-  costInput.addEventListener("keydown", e => {
-    if (["Backspace","Delete"].includes(e.key) || e.key.length === 1 || e.ctrlKey || e.metaKey) markManual();
+  ["keydown","beforeinput","input","change","paste","cut"].forEach(type => {
+    costInput.addEventListener(type, markManual);
   });
-  costInput.addEventListener("beforeinput", e => {
-    if (e.inputType && e.inputType !== "insertCompositionText") markManual();
-  });
-  costInput.addEventListener("paste", markManual);
-  costInput.addEventListener("cut", markManual);
-  costInput.addEventListener("input", markManual);
-  costInput.addEventListener("change", markManual);
 }
 
 
@@ -1001,10 +995,10 @@ async function showPurchaseForm(mode,row=null){
     costInput.classList.add("user-cost");
     costInput.style.color = "#111";
   } else {
-    // Add mode: leave Cost blank until Gallons and Price are entered.
+    // Add mode: calculate as soon as Gallons and Price are available.
     costInput.value = "";
+    calculatePurchaseCostIfReady();
   }
-  calculatePurchaseCostIfReady();
   document.getElementById("purchaseFormMessage").textContent=""; document.getElementById("purchaseStation").focus();
 }
 function showGasPurchaseMessage(message) {
@@ -1064,7 +1058,9 @@ document.getElementById("purchaseForm").addEventListener("submit",async e=>{
   if(error){document.getElementById("purchaseFormMessage").textContent=error;return;}
   try{
     if(await isDuplicatePurchase(rec.Station,rec.PurchaseDate,rec.Gallons,editingPurchaseId)){
-      showGasPurchaseMessage("This purchase is a duplicate of an existing purchase based on Station Name, Purchase Date, and Gallons.");
+      const msg="This purchase is a duplicate of an existing purchase based on Station Name, Purchase Date, and Gallons.";
+      document.getElementById("purchaseFormMessage").textContent=msg;
+      showGasPurchaseMessage(msg);
       return;
     }
     const id=await savePurchase(rec,editingPurchaseId);

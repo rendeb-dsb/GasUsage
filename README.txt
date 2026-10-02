@@ -1,8 +1,8 @@
-Gas Usage PWA - b1v43
+Gas Usage PWA - b1v44
 
-Displayed application version: b1v43
+Displayed application version: b1v44
 
-b1v43 changes:
+b1v44 changes:
 - Restored and hardened automatic Purchase Cost calculation.
 - Gallons x Price is calculated as soon as valid values are present.
 - Calculated Cost is green and formatted as 99.99.
