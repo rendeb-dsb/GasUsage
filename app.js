@@ -921,6 +921,7 @@ let purchaseCostCalculated = false;
 
 function setCalculatedCost(value) {
   const costInput = document.getElementById("purchaseCost");
+  if (!costInput) return;
   costInput.value = Number(value).toFixed(2);
   costInput.classList.add("calculated-cost");
   costInput.classList.remove("user-cost");
@@ -930,6 +931,7 @@ function setCalculatedCost(value) {
 
 function clearCalculatedCostState() {
   const costInput = document.getElementById("purchaseCost");
+  if (!costInput) return;
   costInput.classList.remove("calculated-cost");
   costInput.classList.add("user-cost");
   costInput.style.color = "#111";
@@ -941,40 +943,43 @@ function calculatePurchaseCostIfReady() {
   const priceInput = document.getElementById("purchasePrice");
   const costInput = document.getElementById("purchaseCost");
   if (!gallonsInput || !priceInput || !costInput) return false;
-  const gallonsText = gallonsInput.value.trim();
-  const priceText = priceInput.value.trim();
-  if (!gallonsText || !priceText) return false;
-  const gallons = Number(gallonsText);
-  const price = Number(priceText);
-  if (!Number.isFinite(gallons) || gallons <= 0 || gallons > 50 ||
+
+  const gallons = Number(gallonsInput.value);
+  const price = Number(priceInput.value);
+  if (!gallonsInput.value.trim() || !priceInput.value.trim() ||
+      !Number.isFinite(gallons) || gallons <= 0 || gallons > 50 ||
       !Number.isFinite(price) || price <= 0 || price > 10) return false;
+
   setCalculatedCost(gallons * price);
   return true;
 }
 
 function setupPurchaseCostCalculation() {
-  const gallonsInput = document.getElementById("purchaseGallons");
-  const priceInput = document.getElementById("purchasePrice");
-  const costInput = document.getElementById("purchaseCost");
-  if (!gallonsInput || !priceInput || !costInput) return;
+  // Use document-level capture listeners so this continues to work even if
+  // the form controls are recreated or the browser delays normal bubbling.
+  document.addEventListener("input", e => {
+    if (e.target && (e.target.id === "purchaseGallons" || e.target.id === "purchasePrice")) {
+      calculatePurchaseCostIfReady();
+    }
+    if (e.target && e.target.id === "purchaseCost" && purchaseCostCalculated) {
+      clearCalculatedCostState();
+    }
+  }, true);
 
-  const recalculate = () => {
-    if (document.activeElement === costInput && purchaseCostCalculated) return;
-    calculatePurchaseCostIfReady();
-  };
-  [gallonsInput, priceInput].forEach(input => {
-    input.addEventListener("input", recalculate);
-    input.addEventListener("change", recalculate);
-    input.addEventListener("keyup", recalculate);
-  });
+  document.addEventListener("change", e => {
+    if (e.target && (e.target.id === "purchaseGallons" || e.target.id === "purchasePrice")) {
+      calculatePurchaseCostIfReady();
+    }
+    if (e.target && e.target.id === "purchaseCost" && purchaseCostCalculated) {
+      clearCalculatedCostState();
+    }
+  }, true);
 
-  // Any real user edit of Cost changes a calculated value to a manual value.
-  const markManual = () => {
-    if (purchaseCostCalculated) clearCalculatedCostState();
-  };
-  ["keydown","beforeinput","input","change","paste","cut"].forEach(type => {
-    costInput.addEventListener(type, markManual);
-  });
+  document.addEventListener("keyup", e => {
+    if (e.target && (e.target.id === "purchaseGallons" || e.target.id === "purchasePrice")) {
+      calculatePurchaseCostIfReady();
+    }
+  }, true);
 }
 
 
@@ -995,9 +1000,8 @@ async function showPurchaseForm(mode,row=null){
     costInput.classList.add("user-cost");
     costInput.style.color = "#111";
   } else {
-    // Add mode: calculate as soon as Gallons and Price are available.
+    // Add mode starts with a blank Cost; it will be calculated as Gallons and Price are entered.
     costInput.value = "";
-    calculatePurchaseCostIfReady();
   }
   document.getElementById("purchaseFormMessage").textContent=""; document.getElementById("purchaseStation").focus();
 }
@@ -1064,10 +1068,13 @@ document.getElementById("purchaseForm").addEventListener("submit",async e=>{
       return;
     }
     const id=await savePurchase(rec,editingPurchaseId);
-    // Do not leave the form until the IndexedDB transaction has completed.
+    // The transaction has completed here. Verify the record actually exists before leaving the form.
+    const saved = await getPurchase(id);
+    if (!saved) throw new Error("The database did not return the saved purchase.");
     editingPurchaseId=null;
     await showPurchases();
     await renderPurchases(id);
+    showGasPurchaseMessage("Purchase saved successfully.");
   }catch(err){
     const detail = err && err.message ? err.message : "IndexedDB purchase save failed.";
     showGasPurchaseMessage("The purchase could not be saved. " + detail);
