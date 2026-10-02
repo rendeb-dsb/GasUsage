@@ -952,6 +952,18 @@ function calculatePurchaseCostIfReady() {
   return true;
 }
 
+window.gasUsageRecalcCost = function() {
+  const gallonsInput = document.getElementById("purchaseGallons");
+  const priceInput = document.getElementById("purchasePrice");
+  const costInput = document.getElementById("purchaseCost");
+  if (!gallonsInput || !priceInput || !costInput) return;
+  const gallons = Number(gallonsInput.value);
+  const price = Number(priceInput.value);
+  if (Number.isFinite(gallons) && gallons > 0 && gallons <= 50 && Number.isFinite(price) && price > 0 && price <= 10) {
+    setCalculatedCost(gallons * price);
+  }
+};
+
 function setupPurchaseCostCalculation() {
   const gallonsInput = document.getElementById("purchaseGallons");
   const priceInput = document.getElementById("purchasePrice");
@@ -1023,7 +1035,9 @@ async function isDuplicatePurchase(stationId, purchaseDate, gallons, excludeId =
 
 function validatePurchase(){
   const costInput = document.getElementById("purchaseCost");
-  if (!costInput.value.trim() || purchaseCostCalculated) calculatePurchaseCostIfReady();
+  if (purchaseCostCalculated || !costInput.value.trim()) {
+    window.gasUsageRecalcCost();
+  }
   const date=maskedDateToISO(document.getElementById("purchaseDate").value);
   const station=Number(document.getElementById("purchaseStation").value), car=Number(document.getElementById("purchaseCar").value);
   const gallons=Number(document.getElementById("purchaseGallons").value), price=Number(document.getElementById("purchasePrice").value), cost=Number(document.getElementById("purchaseCost").value);
