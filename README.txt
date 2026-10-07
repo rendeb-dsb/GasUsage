@@ -1,12 +1,10 @@
-Gas Usage PWA - b1v44
-
-Displayed application version: b1v44
-
-b1v44 changes:
-- Restored and hardened automatic Purchase Cost calculation.
-- Gallons x Price is calculated as soon as valid values are present.
-- Calculated Cost is green and formatted as 99.99.
-- User-entered Cost becomes black and is preserved for saving.
-- Save recalculates an automatic Cost before validation when appropriate.
-- Purchase save waits for the IndexedDB transaction to complete before refreshing the list.
-- Existing database name and data model are preserved.
+Gas Usage PWA - b1v49
+ 
+Displayed application version: b1v49
+ 
+b1v49 changes:
+- Purchase saves now use an explicit next PurchaseId and IndexedDB put, avoiding dependence on the auto-increment counter.
+- The saved record is read back and all purchase fields are verified before success is reported.
+- After a successful Save, the Purchases list is displayed with the saved purchase selected before the success message is shown.
+- Cancel from Add/Change Purchase returns to the Purchases screen.
+- New JavaScript and CSS filenames force a fresh browser/PWA resource load.
