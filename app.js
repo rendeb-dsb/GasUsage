@@ -675,23 +675,35 @@ async function getPurchase(id) {
     r.onsuccess=()=>resolve(r.result); r.onerror=()=>reject(r.error);
   });
 }
-async function savePurchase(record,id=null) {
-  const database = await getDatabase();
+async function getNextPurchaseId(database) {
   return new Promise((resolve,reject)=>{
-    let requestResult;
-    let settled = false;
-    try {
-      const tx=database.transaction("Purchases","readwrite");
-      const st=tx.objectStore("Purchases");
-      const r=id===null?st.add(record):st.put({...record,PurchaseId:id});
-      r.onsuccess=()=>{ requestResult=r.result; };
-      r.onerror=()=>{ if(!settled){ settled=true; reject(r.error || new Error("IndexedDB purchase save failed.")); } };
-      tx.onerror=()=>{ if(!settled){ settled=true; reject(tx.error || new Error("IndexedDB purchase transaction failed.")); } };
-      tx.onabort=()=>{ if(!settled){ settled=true; reject(tx.error || new Error("IndexedDB purchase transaction was aborted.")); } };
-      tx.oncomplete=()=>{ if(!settled){ settled=true; resolve(requestResult); } };
-    } catch(err) { reject(err); }
+    const r=database.transaction("Purchases","readonly").objectStore("Purchases").getAll();
+    r.onsuccess=()=>{
+      const max=r.result.reduce((m,row)=>Math.max(m,Number(row.PurchaseId)||0),0);
+      resolve(max+1);
+    };
+    r.onerror=()=>reject(r.error || new Error("Unable to determine the next PurchaseId."));
   });
 }
+
+async function savePurchase(record,id=null) {
+  const database = await getDatabase();
+  const purchaseId = id===null ? await getNextPurchaseId(database) : Number(id);
+  const data = { ...record, PurchaseId: purchaseId };
+  return new Promise((resolve,reject)=>{
+    let settled=false;
+    try {
+      const tx=database.transaction("Purchases","readwrite");
+      const store=tx.objectStore("Purchases");
+      const request=store.put(data);
+      request.onerror=()=>{ if(!settled){ settled=true; reject(request.error || new Error("IndexedDB purchase save failed.")); } };
+      tx.onerror=()=>{ if(!settled){ settled=true; reject(tx.error || new Error("IndexedDB purchase transaction failed.")); } };
+      tx.onabort=()=>{ if(!settled){ settled=true; reject(tx.error || new Error("IndexedDB purchase transaction was aborted.")); } };
+      tx.oncomplete=()=>{ if(!settled){ settled=true; resolve(purchaseId); } };
+    } catch(err) { if(!settled){ settled=true; reject(err); } }
+  });
+}
+
 async function removePurchase(id) {
   const database = await getDatabase();
   return new Promise((resolve,reject)=>{
@@ -817,14 +829,16 @@ function setupPurchaseDateMask() {
 }
 
 function stationNameMap(rows){return new Map(rows.map(s=>[s.StationId,s.Name]));}
-async function loadPurchaseFilters(selectedCar="-1", selectedStationBrand="-1") {
+async function loadPurchaseFilters(selectedCar="-1", selectedStationBrand="-1", selectedBrand="-1") {
   const [cars, brands] = await Promise.all([getCarCodes(), getBrandCodes()]);
   const carSelect = document.getElementById("showCarFilter");
   const stationSelect = document.getElementById("stationFilter");
-  if (!carSelect || !stationSelect) return;
+  const brandSelect = document.getElementById("brandFilter");
+  if (!carSelect || !stationSelect || !brandSelect) return;
 
   carSelect.innerHTML = "";
   stationSelect.innerHTML = "";
+  brandSelect.innerHTML = "";
 
   const allCar = document.createElement("option");
   allCar.value = "-1";
@@ -851,6 +865,19 @@ async function loadPurchaseFilters(selectedCar="-1", selectedStationBrand="-1") 
     option.selected = String(selectedStationBrand) === String(row.SLCId);
     stationSelect.appendChild(option);
   });
+
+  const allBrand = document.createElement("option");
+  allBrand.value = "-1";
+  allBrand.textContent = "All";
+  allBrand.selected = String(selectedBrand) === "-1";
+  brandSelect.appendChild(allBrand);
+  brands.sort((a,b) => a.Order - b.Order || a.SLCId - b.SLCId).forEach(row => {
+    const option = document.createElement("option");
+    option.value = String(row.SLCId);
+    option.textContent = row.Value;
+    option.selected = String(selectedBrand) === String(row.SLCId);
+    brandSelect.appendChild(option);
+  });
 }
 
 async function renderPurchases(selected=null) {
@@ -859,13 +886,19 @@ async function renderPurchases(selected=null) {
   const cm=new Map(cars.map(c=>[c.SLCId,c.Value]));
   const selectedCar=document.getElementById("showCarFilter")?.value ?? "-1";
   const selectedStationBrand=document.getElementById("stationFilter")?.value ?? "-1";
+  const selectedBrand=document.getElementById("brandFilter")?.value ?? "-1";
   const stationMap=new Map(stations.map(s=>[s.StationId,s]));
+  const brandMap=new Map((await getBrandCodes()).map(b=>[b.SLCId,b.Value]));
 
   const filtered=rows.filter(row=>{
     if(selectedCar!=="-1" && Number(row.Car)!==Number(selectedCar)) return false;
     if(selectedStationBrand!=="-1") {
       const station=stationMap.get(Number(row.Station));
       if(!station || Number(station.Brand)!==Number(selectedStationBrand)) return false;
+    }
+    if(selectedBrand!=="-1") {
+      const station=stationMap.get(Number(row.Station));
+      if(!station || Number(station.Brand)!==Number(selectedBrand)) return false;
     }
     return true;
   });
@@ -878,7 +911,7 @@ async function renderPurchases(selected=null) {
     const radio=document.createElement("input"); radio.type="radio"; radio.name="selectedPurchase"; radio.value=row.PurchaseId;
     if(selected!==null && Number(selected)===row.PurchaseId) radio.checked=true;
     td0.appendChild(radio); tr.appendChild(td0);
-    [sm.get(row.Station)||"", cm.get(row.Car)||"", formatDateDisplay(row.PurchaseDate), Number(row.Gallons).toFixed(3), Number(row.Price).toFixed(3), Number(row.Cost).toFixed(2)].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.appendChild(td)});
+    [sm.get(row.Station)||"", brandMap.get(Number(stationMap.get(Number(row.Station))?.Brand))||"", cm.get(row.Car)||"", formatDateDisplay(row.PurchaseDate), Number(row.Gallons).toFixed(3), Number(row.Price).toFixed(3), Number(row.Cost).toFixed(2)].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.appendChild(td)});
     body.appendChild(tr);
   }
 }
@@ -914,7 +947,8 @@ async function showPurchases(){
   document.getElementById("purchaseListMessage").textContent="";
   const selectedCar=document.getElementById("showCarFilter")?.value || "-1";
   const selectedStationBrand=document.getElementById("stationFilter")?.value || "-1";
-  await loadPurchaseFilters(selectedCar, selectedStationBrand);
+  const selectedBrand=document.getElementById("brandFilter")?.value || "-1";
+  await loadPurchaseFilters(selectedCar, selectedStationBrand, selectedBrand);
   await renderPurchases();
 }
 let purchaseCostCalculated = false;
@@ -938,6 +972,8 @@ function clearCalculatedCostState() {
   purchaseCostCalculated = false;
 }
 
+window.gasUsageCalculatePurchaseCost = function(){ return calculatePurchaseCostIfReady(); };
+
 function calculatePurchaseCostIfReady() {
   const gallonsInput = document.getElementById("purchaseGallons");
   const priceInput = document.getElementById("purchasePrice");
@@ -957,6 +993,21 @@ function calculatePurchaseCostIfReady() {
 function setupPurchaseCostCalculation() {
   // Use document-level capture listeners so this continues to work even if
   // the form controls are recreated or the browser delays normal bubbling.
+  document.addEventListener("beforeinput", e => {
+    if (e.target && e.target.id === "purchaseCost" && purchaseCostCalculated) {
+      clearCalculatedCostState();
+    }
+  }, true);
+
+  document.addEventListener("keydown", e => {
+    if (e.target && e.target.id === "purchaseCost" && purchaseCostCalculated) {
+      clearCalculatedCostState();
+    }
+    if (e.target && (e.target.id === "purchaseGallons" || e.target.id === "purchasePrice")) {
+      setTimeout(calculatePurchaseCostIfReady, 0);
+    }
+  }, true);
+
   document.addEventListener("input", e => {
     if (e.target && (e.target.id === "purchaseGallons" || e.target.id === "purchasePrice")) {
       calculatePurchaseCostIfReady();
@@ -1047,10 +1098,15 @@ function validatePurchase(){
 
 document.getElementById("showCarFilter").addEventListener("change", async () => { await renderPurchases(); });
 document.getElementById("stationFilter").addEventListener("change", async () => { await renderPurchases(); });
+document.getElementById("brandFilter").addEventListener("change", async () => { await renderPurchases(); });
 document.getElementById("purchasesButton").addEventListener("click",showPurchases);
 document.getElementById("purchaseCancel").addEventListener("click",showPurchases);
 document.getElementById("gasPurchaseModalOk").addEventListener("click",hideGasPurchaseMessage);
 document.getElementById("gasPurchaseModal").addEventListener("click",e=>{if(e.target.id==="gasPurchaseModal")hideGasPurchaseMessage();});
+document.querySelector("#purchaseForm button[type=submit]").addEventListener("click",()=>{
+  calculatePurchaseCostIfReady();
+});
+
 document.getElementById("purchaseForm").addEventListener("submit",async e=>{
   e.preventDefault();
   // Recalculate immediately before validation/save so the value being stored
@@ -1062,15 +1118,20 @@ document.getElementById("purchaseForm").addEventListener("submit",async e=>{
   if(error){document.getElementById("purchaseFormMessage").textContent=error;return;}
   try{
     if(await isDuplicatePurchase(rec.Station,rec.PurchaseDate,rec.Gallons,editingPurchaseId)){
-      const msg="This purchase is a duplicate of an existing purchase based on Station Name, Purchase Date, and Gallons.";
+      const msg="Purchase NOT saved: an existing purchase already has the same Station Name, Purchase Date, and Gallons.";
       document.getElementById("purchaseFormMessage").textContent=msg;
       showGasPurchaseMessage(msg);
       return;
     }
     const id=await savePurchase(rec,editingPurchaseId);
-    // The transaction has completed here. Verify the record actually exists before leaving the form.
+    // Confirm the exact record that was written before leaving the form.
     const saved = await getPurchase(id);
-    if (!saved) throw new Error("The database did not return the saved purchase.");
+    if (!saved) throw new Error("The purchase save completed, but the new record could not be read back.");
+    if (Number(saved.Station)!==Number(rec.Station) || String(saved.PurchaseDate)!==String(rec.PurchaseDate) ||
+        Number(saved.Car)!==Number(rec.Car) || Number(saved.Gallons)!==Number(rec.Gallons) ||
+        Number(saved.Price)!==Number(rec.Price) || Number(saved.Cost)!==Number(rec.Cost)) {
+      throw new Error("The purchase was written, but the saved values did not match the values entered.");
+    }
     editingPurchaseId=null;
     await showPurchases();
     await renderPurchases(id);

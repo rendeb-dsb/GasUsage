@@ -398,7 +398,7 @@ th,td { border-color:#8d9092; }
 .stations-table th.radio-column, .stations-table td.radio-column { width:38px; }
 
 /* b1v22 Purchases */
-.purchases-table { min-width: 700px; }
+.purchases-table { min-width: 760px; }
 .purchases-table th.radio-column, .purchases-table td.radio-column { width: 38px; }
 .purchase-form-grid { display:grid; grid-template-columns:125px minmax(180px,360px); gap:11px 10px; align-items:center; max-width:510px; }
 .purchase-form-grid label { font-size:15px; }
@@ -513,4 +513,12 @@ th,td { border-color:#8d9092; }
   }
   #showCarFilter, #stationFilter { width: 140px; }
   .purchase-filter-block label { font-size: 15px; }
+}
+
+
+/* b1v49: Brand purchase filter added below Show Car. */
+.brand-filter-block {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 0 14px;
 }
