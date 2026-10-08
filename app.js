@@ -917,7 +917,9 @@ async function renderPurchases(selected=null) {
 
   filtered.sort((a,b)=>String(b.PurchaseDate).localeCompare(String(a.PurchaseDate)) || b.PurchaseId-a.PurchaseId);
   const body=document.getElementById("purchaseRows"); body.innerHTML="";
+  let costTotal = 0;
   for(const row of filtered){
+    costTotal += Number(row.Cost) || 0;
     const tr=document.createElement("tr");
     const td0=document.createElement("td"); td0.className="radio-column";
     const radio=document.createElement("input"); radio.type="radio"; radio.name="selectedPurchase"; radio.value=row.PurchaseId;
@@ -926,6 +928,28 @@ async function renderPurchases(selected=null) {
     [sm.get(row.Station)||"", brandMap.get(Number(stationMap.get(Number(row.Station))?.Brand))||"", cm.get(row.Car)||"", formatDateDisplay(row.PurchaseDate), Number(row.Gallons).toFixed(3), Number(row.Price).toFixed(3), Number(row.Cost).toFixed(2)].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.appendChild(td)});
     body.appendChild(tr);
   }
+
+  // b1v54: show the total of the Cost values currently displayed in the list.
+  // Total is right-justified in the cell immediately before the Cost cell.
+  let foot = document.getElementById("purchaseTotalRow");
+  if (!foot) {
+    const table = body.closest("table");
+    const tfoot = document.createElement("tfoot");
+    foot = document.createElement("tr");
+    foot.id = "purchaseTotalRow";
+    tfoot.appendChild(foot);
+    table.appendChild(tfoot);
+  }
+  foot.innerHTML = "";
+  for (let i = 0; i < 6; i++) foot.appendChild(document.createElement("td"));
+  const totalLabel = document.createElement("td");
+  totalLabel.textContent = "Total";
+  totalLabel.className = "purchase-total-label";
+  foot.appendChild(totalLabel);
+  const totalCell = document.createElement("td");
+  totalCell.textContent = costTotal.toFixed(2);
+  totalCell.className = "purchase-total-value";
+  foot.appendChild(totalCell);
 }
 function selectedPurchaseId(){const r=document.querySelector('input[name="selectedPurchase"]:checked');return r?Number(r.value):null;}
 async function loadPurchaseOptions(selectedStation=null,selectedCar=null){
