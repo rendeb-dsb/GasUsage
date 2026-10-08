@@ -537,3 +537,9 @@ th,td { border-color:#8d9092; }
 .purchases-table tfoot .purchase-total-value {
   text-align: left;
 }
+
+
+/* b1v55: visible Purchase Cost total row */
+.purchases-table tbody tr#purchaseTotalRow td { font-weight:700; border-top:2px solid #8d9092; background:#4b4f52; }
+.purchases-table tbody tr#purchaseTotalRow .purchase-total-label { text-align:right; padding-right:8px; }
+.purchases-table tbody tr#purchaseTotalRow .purchase-total-value { text-align:left; }

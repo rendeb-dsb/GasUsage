@@ -929,27 +929,20 @@ async function renderPurchases(selected=null) {
     body.appendChild(tr);
   }
 
-  // b1v54: show the total of the Cost values currently displayed in the list.
-  // Total is right-justified in the cell immediately before the Cost cell.
-  let foot = document.getElementById("purchaseTotalRow");
-  if (!foot) {
-    const table = body.closest("table");
-    const tfoot = document.createElement("tfoot");
-    foot = document.createElement("tr");
-    foot.id = "purchaseTotalRow";
-    tfoot.appendChild(foot);
-    table.appendChild(tfoot);
-  }
-  foot.innerHTML = "";
-  for (let i = 0; i < 6; i++) foot.appendChild(document.createElement("td"));
+  // b1v55: append the Cost total as the final row of the displayed purchase list.
+  // The label is in the cell immediately before Cost (Price column).
+  const totalRow = document.createElement("tr");
+  totalRow.id = "purchaseTotalRow";
+  for (let i = 0; i < 6; i++) totalRow.appendChild(document.createElement("td"));
   const totalLabel = document.createElement("td");
   totalLabel.textContent = "Total";
   totalLabel.className = "purchase-total-label";
-  foot.appendChild(totalLabel);
+  totalRow.appendChild(totalLabel);
   const totalCell = document.createElement("td");
   totalCell.textContent = costTotal.toFixed(2);
   totalCell.className = "purchase-total-value";
-  foot.appendChild(totalCell);
+  totalRow.appendChild(totalCell);
+  body.appendChild(totalRow);
 }
 function selectedPurchaseId(){const r=document.querySelector('input[name="selectedPurchase"]:checked');return r?Number(r.value):null;}
 async function loadPurchaseOptions(selectedStation=null,selectedCar=null){
