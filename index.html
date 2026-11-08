@@ -7,9 +7,9 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="theme-color" content="#ffffff">
-<title>Gas Usage b1v58</title>
+<title>Gas Usage b1v59</title>
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="styles-b1v58.css?v=b1v58">
+<link rel="stylesheet" href="styles-b1v59.css?v=b1v59">
 <style id="b1v57-layout-fix">
 /* b1v57 layout corrections */
 .entry-grid { grid-template-columns: 105px 40px 86px minmax(80px, 1fr) !important; }
@@ -143,7 +143,7 @@
 <div class="app">
   <header class="topbar opening-header">
     <div class="title-line">
-      <span class="version">b1v58</span>
+      <span class="version">b1v59</span>
       <span class="app-title">Gas Usage</span>
       <button id="gearButton" class="gear-button" aria-label="System Lookup Codes">⚙</button>
     </div>
@@ -205,7 +205,7 @@
       <div id="purchaseListMessage" class="message" aria-live="polite"></div>
       <div class="table-wrap">
         <table class="purchases-table">
-          <thead><tr><th class="radio-column"></th><th>Station<br>Name</th><th>Brand</th><th>Car</th><th>Purchase<br>Date</th><th>Gallons</th><th>Price</th><th>Cost</th></tr></thead>
+          <thead><tr><th class="radio-column"></th><th>Station<br>Name</th><th>Brand</th><th>Car</th><th>Purchase<br>Date</th><th>Gallons</th><th>Price</th><th>Cost</th><th>Milage</th></tr></thead>
           <tbody id="purchaseRows"></tbody>
         </table>
       </div>
@@ -220,6 +220,7 @@
           <label for="purchaseCar">Car:</label><select id="purchaseCar" required></select>
           <label for="purchaseGallons">Gallons:</label><input id="purchaseGallons" type="number" min="0.001" max="50" step="0.001" inputmode="decimal" required oninput="window.gasUsageCalculatePurchaseCost && window.gasUsageCalculatePurchaseCost()" onchange="window.gasUsageCalculatePurchaseCost && window.gasUsageCalculatePurchaseCost()">
           <label for="purchasePrice">Price:</label><input id="purchasePrice" type="number" min="0.001" max="10" step="0.001" inputmode="decimal" required oninput="window.gasUsageCalculatePurchaseCost && window.gasUsageCalculatePurchaseCost()" onchange="window.gasUsageCalculatePurchaseCost && window.gasUsageCalculatePurchaseCost()">
+          <label for="purchaseMileage">Milage:</label><input id="purchaseMileage" type="number" min="1" step="1" inputmode="numeric" placeholder="">
           <label for="purchaseCost">Cost:</label><input id="purchaseCost" type="number" min="0.01" max="99" step="0.01" inputmode="decimal" required>
         </div>
         <div id="purchaseFormMessage" class="message" aria-live="polite"></div>
@@ -332,6 +333,6 @@
       <button type="button" id="gasPurchaseModalOk">OK</button>
     </div>
   </div>
-<script src="app-b1v58.js?v=b1v58"></script>
+<script src="app-b1v59.js?v=b1v59"></script>
 </body>
 </html>
